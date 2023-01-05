@@ -4,6 +4,7 @@ data/in/*
 data/out/Out_SMRY_QRYS/not_shared
 R/sub_fun/not_shared
 R/sub_scripts/not_shared
+R/not_shared
 data
 *.DS_Store
 *NotShared*
