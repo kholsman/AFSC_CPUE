@@ -1,0 +1,10 @@
+not_shared/*
+.Rproj.user
+data/in/*
+data/out/Out_SMRY_QRYS/not_shared
+R/sub_fun/not_shared
+R/sub_scripts/not_shared
+data
+*.DS_Store
+*NotShared*
+._*
