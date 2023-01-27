@@ -23,8 +23,6 @@
   
   close(con)
   
-  splist_n
- 
   for(reg in c("BS","GOA","AI")){
     cat("-- create LWA_glms: ",reg,"\n")
     LWdata <-  createLWA_glms(
@@ -32,7 +30,7 @@
       #data.pathout1 = data.out,
       data.pathout1 = "data/in/lookup_files",
       reg_list      = reg,
-      spcode_IN     = splist_n,
+      spcode_IN     = species_lkup$SPECIES_CODE,
       LWDATA        = "LW_srvy_noObs.Rdata",
       LWDATA_nm     = "LW_srvy",
       flname        = paste0("LWGlms_srvy_",reg,".Rdata"),
@@ -44,7 +42,7 @@
     #data.pathout1 = data.out,
     data.pathout1 = "data/in/lookup_files",
     reg_list      = c("BS","GOA","AI"),
-    spcode_IN     = splist_n,
+    spcode_IN     = species_lkup$SPECIES_CODE,
     LWDATA        = "LW_srvy_noObs.Rdata",
     LWDATA_nm     = "LW_srvy",
     flname        = LWname,
@@ -56,7 +54,7 @@
     #data.pathout1 = data.out,
     data.pathout1 = "data/in/lookup_files",
     reg_list      = c("BS","GOA","AI"),
-    spcode_IN     = splist_n,
+    spcode_IN     = species_lkup$SPECIES_CODE,
     LWDATA        = "LWA_srvy_noObs.Rdata",
     LWDATA_nm     = "LWA_srvy",
     flname        = "LWAGlms_srvy_all_regs.Rdata",

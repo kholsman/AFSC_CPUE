@@ -51,7 +51,7 @@ The below scripts return a list object cpue_data saved as a compressed Rdata fil
 
 ```{r viewcpue_data, echo=TRUE, eval=TRUE} 
 
-load("data/out/2023_01_03/cpue/ebs/ebs.srvy98.plk.cpue_data.Rdata")
+load("data/out/2023_01_06/cpue/ebs/ebs.srvy98.plk.cpue_data.Rdata")
 
 names(cpue_data)
 
@@ -83,8 +83,7 @@ where $ CPUE_{s,k,y,i} $ is the station specific CPUE (saves as the object `cpue
 
 To obtain population level estimates of the biomass or abundance of fish by size bin $l$, we used a length weight regression to esimate the weight of each size fish $j$ measured ($\hat{W}$) to calculate the proportion by weight or frequency at each station where
 $$\hat{W} = \alpha_s+L_j^{\beta_s} $$
-
-and 
+where $\alpha_s$ and $\beta_s$ are fit (updated each year) to all available length and weight data from surveys from all years across the EBS, GOA, and AI (rather than each basin separately) and 
 $$p^w_{l,i} = \frac{N_{l,i}\dot{}\hat{\bar{W_{l,i}}}}{\sum_{}{N_{l,i}\dot{}\hat{\bar{W_{l,i}}}}}$$
 and
 $$p^N_{l,i} = \frac{N_{l,i}}{\sum_{}{N_{l,i}}}$$
@@ -94,7 +93,7 @@ $$CPUE_{s,k,y,l,i} = p^N_{l,i}\dot{}CPUE_{s,k,y,i}$$
 Finally, the average strata CPUE ($\bar{CPUE_{s,k,y,l}}$) and whole of EBS biomass by size bin ($B_{s,y,l}$) was calculated as:
 $$\bar{CPUE_{s,k,y,l}} = \frac{1}{n_k}\dot{}\sum_{n_k}{CPUE_{s,k,y,l,i}}$$
 and
-$$B_{s,y,l}= \bar{CPUE_{s,k,y,l}}\dot{}A_{k}$$
+$$B_{s,y,l}= \frac{\bar{CPUE_{s,k,y,l}}\dot{}A_{k}}{\sum_{n_k}{\bar{CPUE_{s,k,y,l}}\dot{}A_{k}}}\dot{}B_{s,y}$$
 # Code  
 .
 
@@ -107,12 +106,12 @@ The first step is to set up the switches for what files to update and create in 
   # get everything set up:
   #----------------------------------------
     # rm(list=ls())
-# this uses the password saved in R/password.R
+    # this uses the password saved in R/password.R
     suppressMessages(source("R/make.R"))
 
 ```
 
-## Step 1: Update SQL queries (level1)
+## Step 1: Update SQL queries
 This step must be run on a computer that has access to RACEBASE. The code below will generate the base files for steps 2 and 3 below,and will save them in the folder `r data.path ` under subfolders for each region in `srvys$reg` and each species in `splist` (see `R/setup.R` to change these settings).
 
 **IMPORTANT:**  
@@ -195,17 +194,61 @@ This code is the core script for generating the CPUE_NUMKM2 and CPUE_BIOMKM2 val
 
     }
   }
+  
 ```
 
 *The cpue files are now saved in the directory `r file.path(data.out,"../")`*
 
+```{r viewcpue_data, echo=TRUE, eval=TRUE} 
+
+load("data/out/2023_01_06/cpue/ebs/ebs.srvy98.pcod.cpue_data.Rdata")
+
+names(cpue_data)
+
+
+  #double check the results
+  cnt_ByStrataBin <- cpue_data$propByStrataBin_SEBS_NBS%>%
+    select("REGION","YEAR","STRATUM",BIN,BIN_mm,
+           SPECIES_CODE,CN,SN,sp,num,
+           "propB_ykl","propN_ykl")%>%
+    group_by(YEAR,REGION,SN,CN)%>%
+    summarise(sum_propB_ykl=sum(propB_ykl,na.rm=T),
+              sum_propN_ykl=sum(propN_ykl,na.rm=T))
+  
+  cnt_ByStrataBin_SEBS <- cpue_data$propByStrataBin_SEBS%>%
+    select("REGION","YEAR","STRATUM",BIN,BIN_mm,
+           SPECIES_CODE,CN,SN,sp,num,
+           "propB_ykl","propN_ykl")%>%
+    group_by(YEAR,REGION,SN,CN)%>%
+    summarise(sum_propB_ykl=sum(propB_ykl,na.rm=T),
+              sum_propN_ykl=sum(propN_ykl,na.rm=T))
+  
+  cnt_ByStrata <- cpue_data$propByStrata%>%
+    select("REGION","YEAR","STRATUM",
+           SPECIES_CODE,CN,SN,sp,num,
+           "propB_yk","propN_yk")%>%
+    group_by(YEAR,REGION,SN,CN)%>%
+    summarise(sum_propB_yk=sum(propB_yk,na.rm=T),
+              sum_propN_yk=sum(propN_yk,na.rm=T))
+  
+  
+  cnt_ByBin <- cpue_data$propByBin%>%
+    select("REGION","YEAR",BIN,BIN_mm,num,
+           SPECIES_CODE,CN,SN,sp,
+           "propB_yl","propN_yl")%>%
+    group_by(YEAR,REGION,SN,CN)%>%
+    summarise(sum_propB_yl=sum(propB_yl ,na.rm=T),
+              sum_propN_yl=sum(propN_yl ,na.rm=T))
+
+```  
+ 
 
 ## Step 4: calc propB for use in biomass weighting age or diet data
 
 TBA
 
 
-![](figs/out_dir.jpg){width=90%}
+<!-- ![](figs/out_dir.jpg){width=90%} -->
 ## Step 5: Get annual biomass by age and CEATTLE bins:
 
 ```{r Bage, include=F,eval=F}
@@ -235,7 +278,7 @@ source("data/in/lookup_files/2022_assessmentB.R")
 
 ## Appendix 1: `R/setup.R`primary setup script
 
-![](figs/setup_large.jpg){width=90%}
+<!-- ![](figs/setup_large.jpg){width=90%} -->
 
 ```{r makeReadME, echo=FALSE,eval=F, include =F}
 

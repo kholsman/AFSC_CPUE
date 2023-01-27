@@ -29,6 +29,11 @@ sub_surveys     <- surveys%>%filter(SURVEY_DEFINITION_ID%in%c(98,47,52))
 # region          <-  as.character(surveys[surveys$SURVEY_DEFINITION_ID==survey,][1,]$REGION[1])
 # survey_name     <-  as.character(surveys[surveys$SURVEY_DEFINITION_ID==survey,][1,]$SURVEY_NAME[1])
 
+if(update_lkups)
+  source("R/sub_scripts/make_species_lkup.R")
+load(file.path("data/in/lookup_files","species_lkup.Rdata"))
+load(file.path("data/in/lookup_files","species_lkup.Rdata"))
+
 if(update_LWdata){
   source("R/sub_scripts/updateLW.R")
   source("R/sub_scripts/make_species_lkup.R")
@@ -37,8 +42,8 @@ if(update_LWdata){
 load(file.path("data/in/lookup_files",LWname))
 
 
-if(update_lkups)
-  source("R/sub_scripts/make_species_lkup.R")
-load(file.path("data/in/lookup_files","species_lkup.Rdata"))
+
+#splist_n <- species_lkup$SPECIES_CODE
+
 
 

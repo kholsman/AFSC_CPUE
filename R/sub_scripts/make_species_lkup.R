@@ -1,47 +1,49 @@
 # Make species lookup table (key)
 #----------------------
-
+tmp<-read.csv ("data/not_shared/pollock_num_cpue.csv")
 # load GLMS
 load(file.path("data/in/lookup_files",LWname))
 
-species_lkup     <- SPECIES%>%filter(COMMON_NAME%in%splist)%>%select(COMMON_NAME,SPECIES_CODE,SPECIES_NAME)
-species_lkup     <- species_lkup[match(species_lkup$COMMON_NAME,  splist),]
-species_lkup$sp  <- names(splist)
-species_lkup$num <- 1:length(splist)
+species_lkup <-data.frame(sp =splist, num=1:length(splist)) 
+myfun<-function(x,y = SPECIES){
+  # x is a list
+  out <- suppressWarnings(cbind(sp = names(x)[1],spnm = x[1],num=1,y%>%filter(grepl(x[1],COMMON_NAME))))
+  for(i in 2:length(x)){
+   out <-  suppressWarnings(rbind(out,cbind(sp = names(x)[i],spnm = x[i],num=i,y%>%filter(grepl(x[i],COMMON_NAME)))))
+  }
+  return(out)
+}
+
+species_lkup_all <- myfun(x=splist, y = SPECIES)%>%select(sp,spnm,num,COMMON_NAME,SPECIES_CODE,SPECIES_NAME)%>%ungroup()
+species_lkup_all$NAME     <- paste0(species_lkup_all$SPECIES_NAME," (",species_lkup_all$COMMON_NAME,")")
+species_lkup_all$LW_a  <- NA
+species_lkup_all$LW_b  <- NA
+species_lkup_all$df  <- NA
+species_lkup_all$r2  <- NA
+species_lkup_all$LWqrydate  <- NA
+species_lkup_all$LWreg      <- NA
+
+species_lkup     <- species_lkup_all[match(splist,species_lkup_all$COMMON_NAME),]
+
 nn   <-  match(paste0(species_lkup$SPECIES_NAME," (",species_lkup$COMMON_NAME,")"),NODC$NAME)
 
-species_lkup$ECOPATH_PRED <-   NODC[nn,"ECOPATH_PRED"]
-species_lkup$NODC         <-   NODC[nn,"NODC"]
-species_lkup$GOAPOLL_PRED <-   NODC[nn, "GOAPOLL_PRED"]
+sub <- data.frame(NODC[nn,]%>%select("NAME","ECOPATH_PRED","NODC","GOAPOLL_PRED"))
 
-nn <- grep("walleye pollock",species_lkup[,1])
-species_lkup$ECOPATH_PRED[nn] <- NODC[grep("pollock",NODC$NAME)[1],"ECOPATH_PRED"]
-species_lkup$NODC[nn]         <- NODC[grep("pollock",NODC$NAME)[1],"NODC"]
-species_lkup$GOAPOLL_PRED[nn] <- NODC[grep("pollock",NODC$NAME)[1],"GOAPOLL_PRED"]
+species_lkup <- species_lkup%>%left_join(sub)
+species_lkup_all <- species_lkup_all%>%left_join(sub)
 
-species_lkup$LW_a  <- NA
-species_lkup$LW_b  <- NA
-species_lkup$df  <- NA
-species_lkup$r2  <- NA
-species_lkup$LWqrydate  <- NA
-species_lkup$LWreg      <- NA
+species_lkup_all <- species_lkup_all%>%left_join(species_lkup%>%select("sp","NAME","ECOPATH_PRED","NODC","GOAPOLL_PRED"))
 
-# for(s in 3:length(LW.glm)){
-  
-for(s in c("WALLEYE POLLOCK","PACIFIC COD","ARROWTOOTH FLOUNDR","SABLEFISH","PACIFIC HALIBUT")){
-  #nm <- names(LW.glm)[s]
-  #nm <- s
+
+
+#for(s in c("WALLEYE POLLOCK","PACIFIC COD","ARROWTOOTH FLOUNDR","SABLEFISH","PACIFIC HALIBUT")){
+for(s in species_lkup$GOAPOLL_PRED){
   nn <- which(species_lkup$GOAPOLL_PRED==s)
- # nn <- match(nm,gsub(" ","_",species_lkup$GOAPOLL_PRED))
   s2 <- gsub(" ","_",species_lkup$GOAPOLL_PRED[nn])
-
-  
   species_lkup$LW_a[nn] <- as.numeric(exp(coef(LW.glm[[s2]])[1]))
   species_lkup$LW_b[nn] <- as.numeric(coef(LW.glm[[s2]])[2])
   species_lkup$df[nn] <-summary(LW.glm[[s2]])[[7]][2]
   species_lkup$r2[nn] <-summary(LW.glm[[s2]])[[8]]
-  
-  
   species_lkup$LWqrydate[nn]   <- LW.glm[["qrydate"]]
   species_lkup$LWreg[nn]       <- paste0(LW.glm[["regions"]],sep="",collapse=",")
 }
@@ -60,5 +62,7 @@ species_lkup$LWreg[species_lkup$sp=="halibut"]       <- paste0(LW.glm[["regions"
 
 save(species_lkup,file=file.path("data/in/lookup_files",
                                  "species_lkup.Rdata"))
+save(species_lkup_all,file=file.path("data/in/lookup_files",
+                                 "species_lkup_all.Rdata"))
 write.csv(species_lkup,file=file.path("data/in/lookup_files",
                                       "species_lkup.csv"))

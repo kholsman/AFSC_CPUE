@@ -70,19 +70,18 @@ cat("--> connected to AFSC Database <--\n")
     sub_dir <- file.path(data.path,srvys$reg[r])
     if(!dir.exists(sub_dir)) dir.create(sub_dir)
     
-    for(s in 1:dim(species_lkup)[1]){
-      cat(" -- ",srvys$reg[r],": ",species_lkup$sp[s],"  \n")
-      
-      sp_dir <- file.path(sub_dir,species_lkup$sp[s])
+    for(spn in 1:length(splist)){
+      splk <- species_lkup[species_lkup$spnm==splist[spn],]
+      cat(" -- ",srvys$reg[r],": ",splk$sp[1],"  \n")
+      sp_dir <- file.path(sub_dir,splk$sp[1])
       if(!dir.exists(sp_dir)) dir.create(sp_dir)
       
-      out_nm         <- paste0(".",species_lkup$sp[s],".",srvys$reg[r])
+      out_nm         <- paste0(".",splk$sp[1],".",srvys$reg[r])
       location       <- data.frame(sqlQuery(con,location_sql(surveyIN = srvys[r,2] )))
-      location_catch <- data.frame(sqlQuery(con,
-                                            location_catch_sql(surveyIN = srvys[r,2],
-                                                               speciesIN = species_lkup$SPECIES_CODE[s])))
+      location_catch <- data.frame(sqlQuery(con,location_catch_sql(surveyIN = srvys[r,2],
+                                                               speciesIN = splk$SPECIES_CODE)))
       length         <- data.frame(sqlQuery(con,length_sql(surveyIN = srvys[r,2],
-                                                           speciesIN = species_lkup$SPECIES_CODE[s] )))
+                                                           speciesIN = splk$SPECIES_CODE )))
       save(location,       file=file.path(sp_dir,"location.Rdata"))
       save(location_catch, file=file.path(sp_dir,"location_catch.Rdata"))
       save(length,         file=file.path(sp_dir,"length.Rdata"))

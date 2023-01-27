@@ -10,14 +10,13 @@
   #----------------------------------------
   username_path <- "R"   # copy the template from the data/in folder to not_shared
   qrydate       <-  "2023_01_03"
-  splist_n      <-  c(21740, 21720, 10110, 20510, 10120)
   #walleye pollock, Pacific cod, arrowtooth flounder, sablefish Pacific ,halibut
   
   # Set switches for this code
   #----------------------------------------
-  update_LWdata       <-  FALSE  # set to 1 to update LW regressions
-  update_lkups        <-  FALSE # if updating the lookuptables
-  update_qrydate      <-  FALSE # if updating the lookuptables
+  update_LWdata       <-  TRUE  # set to 1 to update LW regressions
+  update_lkups        <-  TRUE # if updating the lookuptables
+  update_qrydate      <-  TRUE # if updating the lookuptables
   if(update_qrydate)
   qrydate       <-  format(Sys.time(), "%Y_%m_%d")
   
@@ -65,8 +64,11 @@
     pcod      = "Pacific cod",
     atf       = "arrowtooth flounder",
     sablefish = "sablefish",
-    halibut   = "Pacific halibut")
-  
+    halibut   = "Pacific halibut",
+    yfs       = "yellowfin sole",
+    nrs       = "northern rock sole"
+    )
+  # splist_n      <-  c(21740, 21720, 10110, 20510, 10120)
   # sp_bins <- list()
   # for(s in 1:length(splist))
   #   sp_bins[[ names(splist)[s]]] <-c(0,400,800,2000) # juvenile adult designations:
