@@ -124,7 +124,7 @@ Kirstin Holsman\\
 Alaska Fisheries Science Center\\
 NOAA Fisheries, Seattle WA\\
 \textbf{\url{kirstin.holsman@noaa.gov}}\strut \\
-\emph{Last updated: Jan 05, 2023}
+\emph{Last updated: Feb 16, 2023}
 
 \hypertarget{overview}{%
 \section{Overview}\label{overview}}
@@ -136,50 +136,71 @@ data.frames:
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{load}\NormalTok{(}\StringTok{"data/out/2023\_01\_03/cpue/ebs/ebs.srvy98.plk.cpue\_data.Rdata"}\NormalTok{)}
+\FunctionTok{load}\NormalTok{(}\StringTok{"data/out/2023\_01\_06/cpue/ebs/ebs.srvy98.plk.cpue\_data.Rdata"}\NormalTok{)}
 
 \FunctionTok{names}\NormalTok{(cpue\_data)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
-## [1] "totalB_N_SEBS_NBS"      "totalB_N_SEBS"          "mnCPUE_strata_yr"      
-## [4] "total_bin_B_N_SEBS"     "total_bin_B_N_SEBS_NBS" "mnCPUE_strata_bin_yr"  
-## [7] "CPUE_station_bin_yr"    "CPUE_station_yr"
+##  [1] "totalB_N_SEBS_NBS"             "totalB_N_SEBS"                
+##  [3] "mnCPUE_strata_yr"              "total_bin_B_N_SEBS"           
+##  [5] "total_bin_B_N_SEBS_NBS"        "mnCPUE_strata_bin_yr_SEBS"    
+##  [7] "mnCPUE_strata_bin_yr_SEBS_NBS" "CPUE_station_bin_yr"          
+##  [9] "CPUE_station_yr"               "propByBin"                    
+## [11] "propByStrata"                  "propByStrataBin_SEBS"         
+## [13] "propByStrataBin_SEBS_NBS"
 \end{verbatim}
 
-The data.frames are
+The data.frames within each cpue\_data object are
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
+\tightlist
 \item
   \textbf{totalB\_N\_SEBS\_NBS}: Total biomass (kg) or abundance (\# of
   fish) for the species in each year for NEBS + SEBS survey results\\
 \item
   \textbf{totalB\_N\_SEBS}: Total biomass (kg) or abundance (\# of fish)
-  for the species in each year for only SEBS survey results
+  for the species in each year for only SEBS survey results\\
 \item
   \textbf{mnCPUE\_strata\_yr} : Average survey CPUE (kg per Km2) or
-  abundance (\# per Km2) for the species in each strata and year
+  abundance (\# per Km2) for the species in each strata and year\\
 \item
   \textbf{total\_bin\_B\_N\_SEBS}: Total biomass (kg) or abundance (\#
   of fish) for each bin (10 mm) for the species in each year for NEBS +
-  SEBS survey results
+  SEBS survey results\\
 \item
   \textbf{total\_bin\_B\_N\_SEBS\_NBS} : Total biomass (kg) or abundance
   (\# of fish) for each bin (10 mm) for the species in each year for
-  only the SEBS survey results
+  only the SEBS survey results\\
 \item
-  \textbf{mnCPUE\_strata\_bin\_yr}: Average survey CPUE (kg per Km2) or
-  abundance (\# per Km2) for each size bin for the species in each
-  strata and year
+  \textbf{mnCPUE\_strata\_bin\_yr\_SEBS} : Average survey CPUE (kg per
+  Km2) or abundance (\# per Km2) for each size bin for the species in
+  each strata and year in the SEBS\\
+\item
+  \textbf{mnCPUE\_strata\_bin\_yr\_SEBS\_NBS} : Average survey CPUE (kg
+  per Km2) or abundance (\# per Km2) for each size bin for the species
+  in each strata and year in the SEBS and NEBS\\
 \item
   \textbf{CPUE\_station\_bin\_yr}: Station specific survey CPUE (kg per
   Km2) or abundance (\# per Km2) for each size bin for the species in
-  eachyear
+  eachyear\\
 \item
   \textbf{CPUE\_station\_yr}: Station specific survey CPUE (kg per Km2)
-  or abundance (\# per Km2) for the species in each year
+  or abundance (\# per Km2) for the species in each year\\
+\item
+  \textbf{propByBin}: proportion of biomass in each size bin per species
+  per year\\
+\item
+  \textbf{propByStrata}: proportion of biomass in each strata per
+  species per year
+\item
+  \textbf{propByStrataBin\_SEBS}: proportion of biomass in each bin and
+  strata per species per year just SEBS
+\item
+  \textbf{propByStrataBin\_SEBS\_NBS}: proportion of biomass each bin
+  and strata per species per year NEBS + SEBS
 \end{enumerate}
 
 These are calculated from the RACEBASE data tables for survey results
@@ -202,9 +223,10 @@ To obtain population level estimates of the biomass or abundance of fish
 by size bin \(l\), we used a length weight regression to esimate the
 weight of each size fish \(j\) measured (\(\hat{W}\)) to calculate the
 proportion by weight or frequency at each station where
-\[\hat{W} = \alpha_s+L_j^{\beta_s} \]
-
-and
+\[\hat{W} = \alpha_s+L_j^{\beta_s} \] where \(\alpha_s\) and \(\beta_s\)
+are fit (updated each year) to all available length and weight data from
+surveys from all years across the EBS, GOA, and AI (rather than each
+basin separately) and
 \[p^w_{l,i} = \frac{N_{l,i}\dot{}\hat{\bar{W_{l,i}}}}{\sum_{}{N_{l,i}\dot{}\hat{\bar{W_{l,i}}}}}\]
 and \[p^N_{l,i} = \frac{N_{l,i}}{\sum_{}{N_{l,i}}}\] This was then
 multiplied by the CPUE at each station (\(CPUE_{s,k,y,i}\)) to obtain a
@@ -214,7 +236,9 @@ station estimate of CPUE by size bin \(l\)
 Finally, the average strata CPUE (\(\bar{CPUE_{s,k,y,l}}\)) and whole of
 EBS biomass by size bin (\(B_{s,y,l}\)) was calculated as:
 \[\bar{CPUE_{s,k,y,l}} = \frac{1}{n_k}\dot{}\sum_{n_k}{CPUE_{s,k,y,l,i}}\]
-and \[B_{s,y,l}= \bar{CPUE_{s,k,y,l}}\dot{}A_{k}\] \# Code\\
+and
+\[B_{s,y,l}= \frac{\bar{CPUE_{s,k,y,l}}\dot{}A_{k}}{\sum_{n_k}{\bar{CPUE_{s,k,y,l}}\dot{}A_{k}}}\dot{}B_{s,y}\]
+\# Code\\
 .
 
 \hypertarget{step-0-set-up-the-r-workspace}{%
@@ -230,18 +254,18 @@ settings as well as base data, functions, and packages.
   \CommentTok{\# get everything set up:}
   \CommentTok{\#{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}}
     \CommentTok{\# rm(list=ls())}
-\CommentTok{\# this uses the password saved in R/password.R}
+    \CommentTok{\# this uses the password saved in R/password.R}
     \FunctionTok{suppressMessages}\NormalTok{(}\FunctionTok{source}\NormalTok{(}\StringTok{"R/make.R"}\NormalTok{))}
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{step-1-update-sql-queries-level1}{%
-\subsection{Step 1: Update SQL queries
-(level1)}\label{step-1-update-sql-queries-level1}}
+\hypertarget{step-1-update-sql-queries}{%
+\subsection{Step 1: Update SQL
+queries}\label{step-1-update-sql-queries}}
 
 This step must be run on a computer that has access to RACEBASE. The
 code below will generate the base files for steps 2 and 3 below,and will
-save them in the folder data/in/2023\_01\_03 under subfolders for each
+save them in the folder data/in/2023\_02\_16 under subfolders for each
 region in \texttt{srvys\$reg} and each species in \texttt{splist} (see
 \texttt{R/setup.R} to change these settings).
 
@@ -279,7 +303,7 @@ The default code for RACEBASE uses set LW relationships, however we
 prefer to update the LW regressions using glms. Depending on how many
 observations exist the LW relationships can be region specific or use
 data across all regions.The default below is all regions combined. This
-code generates two outputs in data/out/2023\_01\_03,
+code generates two outputs in data/out/2023\_02\_16,
 LWGlms\_srvy\_all\_regs.Rdata and \texttt{LW\_SmryTable.Rdata}. It also
 updates the \texttt{species\_lkup\$LW\_a} and species\_lkup\$LW\_b`
 parms used in Step 3.
@@ -346,21 +370,64 @@ CPUE\_BIOMKM2 values by size bin, region, and species.
 \end{Shaded}
 
 \emph{The cpue files are now saved in the directory
-data/out/2023\_01\_03/..}
+data/out/2023\_02\_16/..}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{source}\NormalTok{(}\StringTok{"R/make.R"}\NormalTok{)}
+\FunctionTok{load}\NormalTok{(}\StringTok{"data/out/2023\_01\_06/cpue/ebs/ebs.srvy98.pcod.cpue\_data.Rdata"}\NormalTok{)}
+
+\FunctionTok{names}\NormalTok{(cpue\_data)}
+
+\FunctionTok{library}\NormalTok{(dplyr)}
+  \CommentTok{\#double check the results}
+\NormalTok{  cnt\_ByStrataBin }\OtherTok{\textless{}{-}}\NormalTok{ cpue\_data}\SpecialCharTok{$}\NormalTok{propByStrataBin\_SEBS\_NBS}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{select}\NormalTok{(}\StringTok{"REGION"}\NormalTok{,}\StringTok{"YEAR"}\NormalTok{,}\StringTok{"STRATUM"}\NormalTok{,BIN,BIN\_mm,}
+\NormalTok{           SPECIES\_CODE,CN,SN,sp,num,}
+           \StringTok{"propB\_ykl"}\NormalTok{,}\StringTok{"propN\_ykl"}\NormalTok{)}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{group\_by}\NormalTok{(YEAR,REGION,SN,CN)}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{summarise}\NormalTok{(}\AttributeTok{sum\_propB\_ykl=}\FunctionTok{sum}\NormalTok{(propB\_ykl,}\AttributeTok{na.rm=}\NormalTok{T),}
+              \AttributeTok{sum\_propN\_ykl=}\FunctionTok{sum}\NormalTok{(propN\_ykl,}\AttributeTok{na.rm=}\NormalTok{T))}
+  
+\NormalTok{  cnt\_ByStrataBin\_SEBS }\OtherTok{\textless{}{-}}\NormalTok{ cpue\_data}\SpecialCharTok{$}\NormalTok{propByStrataBin\_SEBS}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{select}\NormalTok{(}\StringTok{"REGION"}\NormalTok{,}\StringTok{"YEAR"}\NormalTok{,}\StringTok{"STRATUM"}\NormalTok{,BIN,BIN\_mm,}
+\NormalTok{           SPECIES\_CODE,CN,SN,sp,num,}
+           \StringTok{"propB\_ykl"}\NormalTok{,}\StringTok{"propN\_ykl"}\NormalTok{)}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{group\_by}\NormalTok{(YEAR,REGION,SN,CN)}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{summarise}\NormalTok{(}\AttributeTok{sum\_propB\_ykl=}\FunctionTok{sum}\NormalTok{(propB\_ykl,}\AttributeTok{na.rm=}\NormalTok{T),}
+              \AttributeTok{sum\_propN\_ykl=}\FunctionTok{sum}\NormalTok{(propN\_ykl,}\AttributeTok{na.rm=}\NormalTok{T))}
+  
+\NormalTok{  cnt\_ByStrata }\OtherTok{\textless{}{-}}\NormalTok{ cpue\_data}\SpecialCharTok{$}\NormalTok{propByStrata}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{select}\NormalTok{(}\StringTok{"REGION"}\NormalTok{,}\StringTok{"YEAR"}\NormalTok{,}\StringTok{"STRATUM"}\NormalTok{,}
+\NormalTok{           SPECIES\_CODE,CN,SN,sp,num,}
+           \StringTok{"propB\_yk"}\NormalTok{,}\StringTok{"propN\_yk"}\NormalTok{)}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{group\_by}\NormalTok{(YEAR,REGION,SN,CN)}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{summarise}\NormalTok{(}\AttributeTok{sum\_propB\_yk=}\FunctionTok{sum}\NormalTok{(propB\_yk,}\AttributeTok{na.rm=}\NormalTok{T),}
+              \AttributeTok{sum\_propN\_yk=}\FunctionTok{sum}\NormalTok{(propN\_yk,}\AttributeTok{na.rm=}\NormalTok{T))}
+  
+  
+\NormalTok{  cnt\_ByBin }\OtherTok{\textless{}{-}}\NormalTok{ cpue\_data}\SpecialCharTok{$}\NormalTok{propByBin}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{select}\NormalTok{(}\StringTok{"REGION"}\NormalTok{,}\StringTok{"YEAR"}\NormalTok{,BIN,BIN\_mm,num,}
+\NormalTok{           SPECIES\_CODE,CN,SN,sp,}
+           \StringTok{"propB\_yl"}\NormalTok{,}\StringTok{"propN\_yl"}\NormalTok{)}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{group\_by}\NormalTok{(YEAR,REGION,SN,CN)}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{summarise}\NormalTok{(}\AttributeTok{sum\_propB\_yl=}\FunctionTok{sum}\NormalTok{(propB\_yl ,}\AttributeTok{na.rm=}\NormalTok{T),}
+              \AttributeTok{sum\_propN\_yl=}\FunctionTok{sum}\NormalTok{(propN\_yl ,}\AttributeTok{na.rm=}\NormalTok{T))}
+\end{Highlighting}
+\end{Shaded}
 
 \hypertarget{step-4-calc-propb-for-use-in-biomass-weighting-age-or-diet-data}{%
 \subsection{Step 4: calc propB for use in biomass weighting age or diet
 data}\label{step-4-calc-propb-for-use-in-biomass-weighting-age-or-diet-data}}
 
-TBA
+see above
 
-\includegraphics[width=0.9\textwidth,height=\textheight]{figs/out_dir.jpg}
-\#\# Step 5: Get annual biomass by age and CEATTLE bins:
+\hypertarget{step-5-get-annual-biomass-by-age-and-ceattle-bins}{%
+\subsection{Step 5: Get annual biomass by age and CEATTLE
+bins:}\label{step-5-get-annual-biomass-by-age-and-ceattle-bins}}
 
 \hypertarget{appendix-1-rsetup.rprimary-setup-script}{%
 \subsection{\texorpdfstring{Appendix 1: \texttt{R/setup.R}primary setup
 script}{Appendix 1: R/setup.Rprimary setup script}}\label{appendix-1-rsetup.rprimary-setup-script}}
-
-\includegraphics[width=0.9\textwidth,height=\textheight]{figs/setup_large.jpg}
 
 \end{document}

@@ -49,7 +49,7 @@ output:
 
 The below scripts return a list object cpue_data saved as a compressed Rdata file with the naming 'reg.srvy#.spp.cpue_data.Rdata' such as "ebs.srvy98.plk.cpue_data.Rdata". Each cpue_data list contains 8 data.frames:
 
-```{r viewcpue_data, echo=TRUE, eval=TRUE} 
+```{r viewcpue_data2, echo=TRUE, eval=TRUE} 
 
 load("data/out/2023_01_06/cpue/ebs/ebs.srvy98.plk.cpue_data.Rdata")
 
@@ -57,22 +57,22 @@ names(cpue_data)
 
 ```  
  
-The data.frames are   
+The data.frames within each cpue_data object are   
 
-1. **totalB_N_SEBS_NBS**: Total biomass (kg) or abundance (# of fish) for the species in each year for NEBS + SEBS survey results  
+1. **totalB_N_SEBS_NBS**: Total biomass (kg) or abundance (# of fish) for the species in each year for NEBS + SEBS survey results   
 2. **totalB_N_SEBS**: Total biomass (kg) or abundance (# of fish) for the species in each year for only SEBS survey results  
-
 3. **mnCPUE_strata_yr** : Average survey CPUE (kg per Km2) or abundance (# per Km2) for the species in each strata and year  
-
-4. **total_bin_B_N_SEBS**: Total biomass (kg) or abundance (# of fish) for each bin (10 mm) for the species in each year for NEBS + SEBS survey results  
-
-5. **total_bin_B_N_SEBS_NBS** : Total biomass (kg) or abundance (# of fish) for each bin (10 mm) for the species in each year for  only the SEBS survey results  
-
-6. **mnCPUE_strata_bin_yr**: Average survey CPUE (kg per Km2) or abundance (# per Km2) for each size bin for the species in each strata and year  
-
+4. **total_bin_B_N_SEBS**: Total biomass (kg) or abundance (# of fish) for each bin (10 mm) for the species in each year for NEBS + SEBS survey results    
+5. **total_bin_B_N_SEBS_NBS** : Total biomass (kg) or abundance (# of fish) for each bin (10 mm) for the species in each year for  only the SEBS survey results    
+6. **mnCPUE_strata_bin_yr_SEBS** : Average survey CPUE (kg per Km2) or abundance (# per Km2) for each size bin for the species in each strata and year in the SEBS  
+7. **mnCPUE_strata_bin_yr_SEBS_NBS** : Average survey CPUE (kg per Km2) or abundance (# per Km2) for each size bin for the species in each strata and year in the SEBS and NEBS  
 7. **CPUE_station_bin_yr**: Station specific survey CPUE (kg per Km2) or abundance (# per Km2) for each size bin for the species in eachyear    
-
 8. **CPUE_station_yr**: Station specific survey CPUE (kg per Km2) or abundance (# per Km2) for the species in each year  
+9. **propByBin**: proportion of biomass in each size bin per species per year  
+10. **propByStrata**: proportion of biomass in each strata per species per year
+11. **propByStrataBin_SEBS**: proportion of biomass in each bin and strata per species per year just SEBS
+12. **propByStrataBin_SEBS_NBS**: proportion of biomass each bin and strata per species per year NEBS + SEBS
+
 
 These are calculated from the RACEBASE data tables for survey results where total CPUE was recorded for the species $s$ (location_catch) at each haul, expanded to include stations $i$ where CPUE=0 (location) and expanded to each size bin $l$ using the proportional subset of frequency of fish of given length (mm), binned into 10 mm bins ($l$) and predicted weight ($\hat{W}$) for each size bin $l$ at each station $i$:
 
@@ -199,13 +199,14 @@ This code is the core script for generating the CPUE_NUMKM2 and CPUE_BIOMKM2 val
 
 *The cpue files are now saved in the directory `r file.path(data.out,"../")`*
 
-```{r viewcpue_data, echo=TRUE, eval=TRUE} 
-
+```{r viewcpue_data, echo=TRUE, eval=FALSE} 
+  # this uses the password saved in R/password.R
+    suppressMessages(source("R/make.R"))
 load("data/out/2023_01_06/cpue/ebs/ebs.srvy98.pcod.cpue_data.Rdata")
 
 names(cpue_data)
 
-
+library(dplyr)
   #double check the results
   cnt_ByStrataBin <- cpue_data$propByStrataBin_SEBS_NBS%>%
     select("REGION","YEAR","STRATUM",BIN,BIN_mm,
@@ -244,9 +245,7 @@ names(cpue_data)
  
 
 ## Step 4: calc propB for use in biomass weighting age or diet data
-
-TBA
-
+ see above
 
 <!-- ![](figs/out_dir.jpg){width=90%} -->
 ## Step 5: Get annual biomass by age and CEATTLE bins:
@@ -280,7 +279,8 @@ source("data/in/lookup_files/2022_assessmentB.R")
 
 <!-- ![](figs/setup_large.jpg){width=90%} -->
 
-```{r makeReadME, echo=FALSE,eval=F, include =F}
+```{r makeReadME, echo=FALSE,eval=T, include =F}
+ suppressMessages(source("R/make.R"))
 
  # copy and paste this into R window (won't work within markdown)
  rmd2md(rmd_fl = "HowTo_get_survey_data",md_fl = "README")
