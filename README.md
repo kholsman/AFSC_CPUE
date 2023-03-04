@@ -22,6 +22,18 @@ load(paste0("data/out/",qrydate,"/cpue/ebs/ebs.srvy98.plk.cpue_data.Rdata"))
 names(cpue_data)
 ```
 
+There is a folder for each region “ebs”, “goa”, “ai”. For the “ebs”
+(Bering Sea) there are two sets of cpue_data, one that is NEBS+SEBS
+combined (‘ebs.srvy98.\[sp\].cpue_data.Rdata’) and one that is just SEBS
+survey areas (‘sebs.srvy98.\[sp\].cpue_data.Rdata’). For both the Gulf
+of Alaska (“goa”) and the Bering Sea, mean CPUE (Kg per km2 or Number
+per km2) for each size bin at each strata was calculated and then
+multiplied by the STRATA area to get total Biomass and abundance.
+**Note:Since strata area estimates where not available for the Aleutian
+Island (“ai”) or slope surveys (“slope”) these AREA was set equal to 1
+and the Total Biomass and abundance is actually the sum of mean biomass.
+**
+
 The data.frames within each cpue_data object are:
 
 1.  **totalB_N**: Total biomass (kg) or abundance (# of fish) for the
