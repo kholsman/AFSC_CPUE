@@ -2,20 +2,6 @@
 title: "Get and summarize AFSC survey data"
 author: "Kirstin Holsman, Alaska Fisheries Science Center"
 output:
-  html_document:
-    df_print: kable
-    fig_caption: yes
-    theme: flatly
-    toc: true
-    toc_float: true
-  word_document:
-    fig_caption: yes
-    fig_width: 4
-    keep_md: yes
-  header-includes:
-  - \usepackage{inputenc}
-  - \usepackage{unicode-math}
-  - \pagenumbering{gobble}
   pdf_document:
     fig_caption: yes
     fig_height: 4
@@ -24,6 +10,20 @@ output:
     keep_tex: yes
     latex_engine: xelatex
     toc: TRUE
+  word_document:
+    fig_caption: yes
+    fig_width: 4
+    keep_md: yes
+  header-includes:
+  - \usepackage{inputenc}
+  - \usepackage{unicode-math}
+  - \pagenumbering{gobble}
+  html_document:
+    df_print: kable
+    fig_caption: yes
+    theme: flatly
+    toc: true
+    toc_float: true
 ---
 
 <!-- default, tango, pygments, kate, monochrome, espresso, zenburn, haddock, and textmate. -->
@@ -78,23 +78,29 @@ These are calculated from the RACEBASE data tables for survey results where tota
 
 $$B_{s,y} =  \bar{CPUE_{s,k,y}} \dot{}A_{k}$$
 where $A_{k}$ is the area of the strata $k$ in $Km^2$ and $\bar{CPUE_{s,k,y}}$ is the strata specific average CPUE (kg per $Km^2$ or number per $Km^2$) of all stations $i$ in strata $k$:
-$$\bar{CPUE_{s,k,y}} = \frac{1}{n_k}\dot{}\sum_{n_k}{CPUE_{s,k,y,i}}$$
-where $ CPUE_{s,k,y,i} $ is the station specific CPUE (saves as the object `cpue_data$CPUE_station_yr`).
+$$\bar{CPUE_{s,k,y}} = \frac{1}{n_k}\dot{}\sum_{n_k}{CPUE_{s,k,y,i}}$$  
+where $CPUE_{s,k,y,i}$ is the station specific CPUE (saved as the object `cpue_data$CPUE_station_yr`).
 
-To obtain population level estimates of the biomass or abundance of fish by size bin $l$, we used a length weight regression to esimate the weight of each size fish $j$ measured ($\hat{W}$) to calculate the proportion by weight or frequency at each station where
+To obtain population level estimates of the biomass or abundance of fish by size bin $l$, we used a length weight regression to estimate the weight of each size fish $j$ measured ($\hat{W}$) to calculate the proportion by weight or frequency at each station where
 $$\hat{W} = \alpha_s+L_j^{\beta_s} $$
-where $\alpha_s$ and $\beta_s$ are fit (updated each year) to all available length and weight data from surveys from all years across the EBS, GOA, and AI (rather than each basin separately) and 
+where $\alpha_s$ and $\beta_s$ are fit (updated each year) to all available length and weight data from surveys from all years across the EBS, GOA, and AI (rather than each basin separately) and
 $$p^w_{l,i} = \frac{N_{l,i}\dot{}\hat{\bar{W_{l,i}}}}{\sum_{}{N_{l,i}\dot{}\hat{\bar{W_{l,i}}}}}$$
-and
+and  
 $$p^N_{l,i} = \frac{N_{l,i}}{\sum_{}{N_{l,i}}}$$
-This was then multiplied by the CPUE at each station ($CPUE_{s,k,y,i}$) to obtain a station estimate of CPUE by size bin $l$
+This was then multiplied by the CPUE at each station ($CPUE_{s,k,y,i}$) to obtain a station estimate of CPUE by size bin $l$:
 $$CPUE_{s,k,y,l,i} = p^N_{l,i}\dot{}CPUE_{s,k,y,i}$$
 
-Finally, the average strata CPUE ($\bar{CPUE_{s,k,y,l}}$) and whole of EBS biomass by size bin ($B_{s,y,l}$) was calculated as:
-$$\bar{CPUE_{s,k,y,l}} = \frac{1}{n_k}\dot{}\sum_{n_k}{CPUE_{s,k,y,l,i}}$$
-and
-$$B_{s,y,l}= \frac{\bar{CPUE_{s,k,y,l}}\dot{}A_{k}}{\sum_{n_k}{\bar{CPUE_{s,k,y,l}}\dot{}A_{k}}}\dot{}B_{s,y}$$
+Finally, the average strata CPUE (${mnCPUE_{s,k,y,l}}$) was calculated as:
+$${mnCPUE_{s,k,y,l}} = \frac{1}{n_k}\dot{}\sum_{n_k}{CPUE_{s,k,y,l,i}}$$
+and strata- and bin-specific biomass (Kg) was calculated the product of mean CPUE (Kg per Km^2) and strata area (Km^2):
+$$B_{s,y,k,l}= {mnCPUE_{s,k,y,l}}\dot{}A_{k}$$
 
+and total annual biomass by bin is the sum of strata-specific biomass for each species:
+
+$$B_{s,y,l}= \sum_{n_k}{B_{s,y,k,l}}$$
+and total annual biomass is:
+
+$$B_{s,y}= \sum_{n_l}{\sum_{n_k}{B_{s,y,k,l}}}$$
 
 # Comparison of Bering Sea survey values
 

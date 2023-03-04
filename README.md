@@ -72,11 +72,12 @@ where *A*<sub>*k*</sub> is the area of the strata *k* in
 average CPUE (kg per *K**m*<sup>2</sup> or number per
 *K**m*<sup>2</sup>) of all stations *i* in strata *k*:
 $$\\bar{CPUE\_{s,k,y}} = \\frac{1}{n_k}\\dot{}\\sum\_{n_k}{CPUE\_{s,k,y,i}}$$
-where $ CPUE\_{s,k,y,i} $ is the station specific CPUE (saves as the
-object `cpue_data$CPUE_station_yr`).
+  
+where *C**P**U**E*<sub>*s*, *k*, *y*, *i*</sub> is the station specific
+CPUE (saved as the object `cpue_data$CPUE_station_yr`).
 
 To obtain population level estimates of the biomass or abundance of fish
-by size bin *l*, we used a length weight regression to esimate the
+by size bin *l*, we used a length weight regression to estimate the
 weight of each size fish *j* measured (*Ŵ*) to calculate the proportion
 by weight or frequency at each station where
 *Ŵ* = *α*<sub>*s*</sub> + *L*<sub>*j*</sub><sup>*β*<sub>*s*</sub></sup>
@@ -85,18 +86,27 @@ year) to all available length and weight data from surveys from all
 years across the EBS, GOA, and AI (rather than each basin separately)
 and
 $$p^w\_{l,i} = \\frac{N\_{l,i}\\dot{}\\hat{\\bar{W\_{l,i}}}}{\\sum\_{}{N\_{l,i}\\dot{}\\hat{\\bar{W\_{l,i}}}}}$$
-and
+and  
 $$p^N\_{l,i} = \\frac{N\_{l,i}}{\\sum\_{}{N\_{l,i}}}$$
 This was then multiplied by the CPUE at each station
 (*C**P**U**E*<sub>*s*, *k*, *y*, *i*</sub>) to obtain a station estimate
-of CPUE by size bin *l*
+of CPUE by size bin *l*:
 $$CPUE\_{s,k,y,l,i} = p^N\_{l,i}\\dot{}CPUE\_{s,k,y,i}$$
 
-Finally, the average strata CPUE ($\\bar{CPUE\_{s,k,y,l}}$) and whole of
-EBS biomass by size bin (*B*<sub>*s*, *y*, *l*</sub>) was calculated as:
-$$\\bar{CPUE\_{s,k,y,l}} = \\frac{1}{n_k}\\dot{}\\sum\_{n_k}{CPUE\_{s,k,y,l,i}}$$
-and
-$$B\_{s,y,l}= \\frac{\\bar{CPUE\_{s,k,y,l}}\\dot{}A\_{k}}{\\sum\_{n_k}{\\bar{CPUE\_{s,k,y,l}}\\dot{}A\_{k}}}\\dot{}B\_{s,y}$$
+Finally, the average strata CPUE
+(*m**n**C**P**U**E*<sub>*s*, *k*, *y*, *l*</sub>) was calculated as:
+$${mnCPUE\_{s,k,y,l}} = \\frac{1}{n_k}\\dot{}\\sum\_{n_k}{CPUE\_{s,k,y,l,i}}$$
+and strata- and bin-specific biomass (Kg) was calculated the product of
+mean CPUE (Kg per Km^2) and strata area (Km^2):
+$$B\_{s,y,k,l}= {mnCPUE\_{s,k,y,l}}\\dot{}A\_{k}$$
+
+and total annual biomass by bin is the sum of strata-specific biomass
+for each species:
+
+*B*<sub>*s*, *y*, *l*</sub> = ∑<sub>*n*<sub>*k*</sub></sub>*B*<sub>*s*, *y*, *k*, *l*</sub>
+and total annual biomass is:
+
+*B*<sub>*s*, *y*</sub> = ∑<sub>*n*<sub>*l*</sub></sub>∑<sub>*n*<sub>*k*</sub></sub>*B*<sub>*s*, *y*, *k*, *l*</sub>
 
 # Comparison of Bering Sea survey values
 
