@@ -56,11 +56,8 @@ cat("--> connected to AFSC Database <--\n")
 
 
   tables   <- sqlTables(con,schema="FOODLAB")$TABLE_NAME
-  tables2   <- sqlTables(con,schema=RACE_schema)$TABLE_NAME
+  # tables2   <- sqlTables(con,schema=RACE_schema)$TABLE_NAME
  
-  
-  
-
   cat(" -- Create data tables\n")
  
   # Create data tables (not saved to Oracle for now)

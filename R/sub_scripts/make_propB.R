@@ -1,4 +1,4 @@
-# Get propB:
+# make_propB:
 # ------------------------------------
 # k = strata; l = bin; y = year
 # use propB_ykl If you want annual sums  use  and summarize as : val*propB_ykl & group_by(YEAR,REGION,SN,CN)%>%

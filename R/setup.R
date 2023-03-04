@@ -9,16 +9,16 @@
   # Set up SQL stuff:
   #----------------------------------------
   username_path <- "R"   # copy the template from the data/in folder to not_shared
-  qrydate       <-  "2023_01_03"
+  qrydate       <-  "2023_03_02"
   #walleye pollock, Pacific cod, arrowtooth flounder, sablefish Pacific ,halibut
   
   # Set switches for this code
   #----------------------------------------
-  update_LWdata       <-  TRUE  # set to 1 to update LW regressions
-  update_lkups        <-  TRUE # if updating the lookuptables
-  update_qrydate      <-  TRUE # if updating the lookuptables
+  update_LWdata       <-   # set to 1 to update LW regressions
+  update_lkups        <-   # if updating the lookuptables
+  update_qrydate      <-  FALSE # TRUE # if updating the lookuptables
   if(update_qrydate)
-  qrydate       <-  format(Sys.time(), "%Y_%m_%d")
+   qrydate <-  format(Sys.time(), "%Y_%m_%d")
   
   # Set up data folders:
   #------------------------------------
@@ -77,7 +77,8 @@
   for(s in 1:length(splist))
     sp_bins[[ names(splist)[s]]] <- seq(0,1500,10)  # 1 cm bins
   
-  srvys <- data.frame(reg=c("ebs","goa","ai"),num=c(98,47,52)  )
+  NEBS_strata <- c(70,71,81)
+  srvys <- data.frame(reg=c("sebs","nebs","goa","ai","slope"),num=c(98, 143,47,52,78)  )
   # surveys%>%filter(REGION=="GOA",SURVEY_NAME=="Gulf of Alaska Bottom Trawl Survey")%>%select(SURVEY_DEFINITION_ID)
     # survey = 143 Northern Bering Sea survey
     # survey = 98  Eastern Bering Sea Crab/Groundfish Bottom Trawl Survey

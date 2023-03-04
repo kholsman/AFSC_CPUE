@@ -14,13 +14,15 @@ myfun<-function(x,y = SPECIES){
   return(out)
 }
 
-species_lkup_all <- myfun(x=splist, y = SPECIES)%>%select(sp,spnm,num,COMMON_NAME,SPECIES_CODE,SPECIES_NAME)%>%ungroup()
-species_lkup_all$NAME     <- paste0(species_lkup_all$SPECIES_NAME," (",species_lkup_all$COMMON_NAME,")")
-species_lkup_all$LW_a  <- NA
-species_lkup_all$LW_b  <- NA
-species_lkup_all$df  <- NA
-species_lkup_all$r2  <- NA
-species_lkup_all$LWqrydate  <- NA
+species_lkup_all            <- myfun(x=splist, y = SPECIES)%>%
+  select(sp,spnm,num,COMMON_NAME,SPECIES_CODE,SPECIES_NAME)%>%
+  ungroup()
+species_lkup_all$NAME       <- paste0(species_lkup_all$SPECIES_NAME," (",species_lkup_all$COMMON_NAME,")")
+species_lkup_all$LW_a       <-
+species_lkup_all$LW_b       <-
+species_lkup_all$df         <-
+species_lkup_all$r2         <-
+species_lkup_all$LWqrydate  <-
 species_lkup_all$LWreg      <- NA
 
 species_lkup     <- species_lkup_all[match(splist,species_lkup_all$COMMON_NAME),]
@@ -32,7 +34,8 @@ sub <- data.frame(NODC[nn,]%>%select("NAME","ECOPATH_PRED","NODC","GOAPOLL_PRED"
 species_lkup <- species_lkup%>%left_join(sub)
 species_lkup_all <- species_lkup_all%>%left_join(sub)
 
-species_lkup_all <- species_lkup_all%>%left_join(species_lkup%>%select("sp","NAME","ECOPATH_PRED","NODC","GOAPOLL_PRED"))
+species_lkup_all <- species_lkup_all%>%left_join(species_lkup%>%
+                                                   select("sp","NAME","ECOPATH_PRED","NODC","GOAPOLL_PRED"))
 
 
 
@@ -42,14 +45,14 @@ for(s in species_lkup$GOAPOLL_PRED){
   s2 <- gsub(" ","_",species_lkup$GOAPOLL_PRED[nn])
   species_lkup$LW_a[nn] <- as.numeric(exp(coef(LW.glm[[s2]])[1]))
   species_lkup$LW_b[nn] <- as.numeric(coef(LW.glm[[s2]])[2])
-  species_lkup$df[nn] <-summary(LW.glm[[s2]])[[7]][2]
-  species_lkup$r2[nn] <-summary(LW.glm[[s2]])[[8]]
+  species_lkup$df[nn]          <- summary(LW.glm[[s2]])[[7]][2]
+  species_lkup$r2[nn]          <- summary(LW.glm[[s2]])[[8]]
   species_lkup$LWqrydate[nn]   <- LW.glm[["qrydate"]]
   species_lkup$LWreg[nn]       <- paste0(LW.glm[["regions"]],sep="",collapse=",")
 }
 
-species_lkup$LW_a[species_lkup$sp=="halibut"]<-3.139e-03
-species_lkup$LW_b[species_lkup$sp=="halibut"]<-3.24
+species_lkup$LW_a[species_lkup$sp=="halibut"] <- 3.139e-03
+species_lkup$LW_b[species_lkup$sp=="halibut"] <- 3.24
 species_lkup$df[species_lkup$sp=="halibut"]   <- NA
 species_lkup$r2[species_lkup$sp=="halibut"]   <- NA
 species_lkup$LWqrydate[species_lkup$sp=="halibut"]   <- LW.glm[["qrydate"]]

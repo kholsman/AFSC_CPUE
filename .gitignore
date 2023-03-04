@@ -5,8 +5,8 @@ data/out/Out_SMRY_QRYS/not_shared
 R/sub_fun/not_shared
 R/sub_scripts/not_shared
 R/not_shared
-R/username_password.R
+**R/username_password.R**
 data
 *.DS_Store
-*NotShared*
-._*
+**NotShared**
+**._*

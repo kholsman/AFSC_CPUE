@@ -1,9 +1,8 @@
 # species=spp$num[s]; survey = 98;bins = bins1; LW_a=LW_a_in[s]; LW_b=LW_b_in[s];species=10120
 
-get_CPUE_DATA     <- function(
+get_CPUE_DATAOLD     <- function(
   datapath  = data.path,
   out_dir   = file.path(data.out,"../"),
-  STRATA_AREAIN = STRATA_AREA,
   cpue_dir  = "cpue",
   saveit    = T,
   flnm      = flnm,
@@ -48,14 +47,14 @@ get_CPUE_DATA     <- function(
     stop(cat("species codes do not match!length species code = ",length$SPECIES_CODE[1],
              ", while species num =", spnum ))
   
-  ## if survey is EBS, exclude far north regions.
-  if(survey==98){
-    if(!includeNBS){
-      length         <- length%>%filter(!is.na(STRATUM),!STRATUM%in%NEBSStrataIN )
-      location       <- location%>%filter(!is.na(STRATUM),!STRATUM%in%NEBSStrataIN )
-      location_catch <- location_catch%>%filter(!is.na(STRATUM),!STRATUM%in%NEBSStrataIN )
-    }
-  }
+  # ## if survey is EBS, exclude far north regions.
+  # if(survey==98){
+  #   if(!includeNBS){
+  #     length         <- length%>%filter(!is.na(STRATUM),!STRATUM%in%NEBSStrataIN )
+  #     location       <- location%>%filter(!is.na(STRATUM),!STRATUM%in%NEBSStrataIN )
+  #     location_catch <- location_catch%>%filter(!is.na(STRATUM),!STRATUM%in%NEBSStrataIN )
+  #   }
+  # }
   
   ## for SLope survey exclude 2000 from all plots
   if(survey==78){
@@ -92,9 +91,9 @@ get_CPUE_DATA     <- function(
     length$W_hat   <- exp(log(LW_a)+log(length$LENGTH/10)*LW_b)
     length$qrydate <- as.character(qrydate)
   }
-  cat(paste("   -- LW_a=",round(LW_a*(10^3),4)," x10-3 and LW_b=",round(LW_b,4),"\n"))
+  cat(paste("LW_a=",round(LW_a*(10^3),4)," x10-3 and LW_b=",round(LW_b,4),"\n"))
   
-  cat("   -- assigning bins....\n"  )
+  cat("\n assigning bins....\n"  )
  
   length$BIN    <- NA
   length$BIN_mm <- ""
@@ -108,6 +107,14 @@ get_CPUE_DATA     <- function(
   
   # Step 2. Get annual biomass and abundance estimates
   # -----------------------------------------
+  
+  # get Strata AREA estimates from 2019 - they were updated in 2022 but are larger??
+  sub_SA <- STRATA_AREA%>%filter(YEAR>2009,YEAR<2022)%>%
+    group_by(REGION,STRATUM)%>%
+    summarize(AREA = mean(AREA, na.rm=T))%>%ungroup()
+  sub_SA <- STRATA_AREA%>%filter(YEAR==2022)%>%
+    group_by(REGION,STRATUM)%>%
+    summarize(AREA = mean(AREA, na.rm=T))%>%ungroup()
   
   # create full matrix of stations and populate 0s for where haul took place 
   # but CPUE == 0 using location (all stations sampled) and location_catch (with CPUE>0)
@@ -139,19 +146,11 @@ get_CPUE_DATA     <- function(
   CPUE_station_yr$CPUE_NUMKM2[nn]<- CPUE_station_yr$CPUE_KGKM2[nn] <-0
   
   # combine strata AREA with CPUE_station_yr
-  if(is.null(STRATA_AREAIN)){
-    cat("    --! STRATA AREA is null; setting AREA = 1 so all propB reflects CPUE")
-    STRATA_AREAIN = data.frame(
-      REGION  = unique(CPUE_station_yr$REGION),
-      STRATUM = unique(CPUE_station_yr$STRATUM),
-      AREA = 1)
-  }
-      
-      
-   CPUE_station_yr <- CPUE_station_yr%>%
-      left_join(STRATA_AREAIN)%>%
-      mutate(SURVEY_DEFINITION_ID = survey,
-             SPECIES_CODE = spnum)
+  CPUE_station_yr <- CPUE_station_yr%>%
+    left_join(sub_SA)%>%
+    mutate(SURVEY_DEFINITION_ID = survey,
+           SPECIES_CODE = spnum)
+  
   se <- function(x,na.rm=T){
     if(na.rm==T){
       if(any(is.na(x)))
@@ -185,7 +184,7 @@ get_CPUE_DATA     <- function(
                 select(SPECIES_CODE,CN,SN,sp,num,NAME))%>%ungroup()
   
   #Total Biomass and abundance for NBS+SEBS annually
-  totalB_N <- mnCPUE_strata_yr%>%
+  totalB_N_SEBS_NBS <- mnCPUE_strata_yr%>%
     group_by(REGION, YEAR,SPECIES_CODE,CN,SN,sp,num,NAME)%>%
     summarize(nstrata = length(mnCPUE_KGKM2_yk),
               nobs      = sum(nobs_yk),
@@ -196,29 +195,61 @@ get_CPUE_DATA     <- function(
               seB_KG_y  = sum(seB_KG_yk,na.rm=T),
               seN_y     = sum(seN_yk,na.rm=T))%>%ungroup()
   
-    propByStrata <- mnCPUE_strata_yr%>%
+    propByStrata_SEBS_NBS <- mnCPUE_strata_yr%>%
       select("REGION","YEAR","STRATUM",SPECIES_CODE,CN,SN,sp,num,NAME,
              "B_KG_yk"  ,"N_yk",
              "nobs_yk",
              "sdB_KG_yk","sdN_yk",
              "seB_KG_yk","seN_yk") %>%
-      left_join(totalB_N%>%
+      left_join(totalB_N_SEBS_NBS%>%
                   select("REGION","YEAR","SPECIES_CODE",
                          "B_KG_y"  ,"N_y",
                          "nobs",
                          "sdB_KG_y","sdN_y",
                          "seB_KG_y","seN_y"))
-    tmpP<-propByStrata
+    tmpP<-propByStrata_SEBS_NBS
     # "prop B in a given strata": use this when collapsing strata specific values up to the regional level:
     tmpP$propB_yk     <- 0; cc<- which(tmpP$B_KG_y>0)
     tmpP$propB_yk[cc] <- tmpP$B_KG_yk[cc]/tmpP$B_KG_y[cc]
     tmpP$propN_yk     <- 0;cc<- which(tmpP$N_y>0)
     tmpP$propN_yk[cc] <- tmpP$N_yk[cc]/tmpP$N_y[cc] 
-    propByStrata<-tmpP%>%ungroup()
+    propByStrata_SEBS_NBS<-tmpP%>%ungroup()
     rm(tmpP)
     
     
-
+  #Total Biomass and abundance for SEBS only annually
+  totalB_N_SEBS <- mnCPUE_strata_yr%>%filter(!STRATUM%in%NEBSStrataIN )%>%
+    group_by(REGION,YEAR,SPECIES_CODE,CN,SN,sp,num,NAME)%>%
+    summarize(nstrata = length(mnCPUE_KGKM2_yk),
+              nobs      = sum(nobs_yk),
+              B_KG_y    = sum(B_KG_yk,na.rm=T),
+              N_y       = sum(N_yk,na.rm=T),
+              sdB_KG_y  = sum(sdB_KG_yk,na.rm=T),
+              sdN_y     = sum(sdN_yk,na.rm=T),
+              seB_KG_y  = sum(seB_KG_yk,na.rm=T),
+              seN_y     = sum(seN_yk,na.rm=T))%>%ungroup()
+  
+    # Now for all strata:
+    propByStrata_SEBS <- mnCPUE_strata_yr%>%
+      select("REGION","YEAR","STRATUM",SPECIES_CODE,CN,SN,sp,num,NAME,
+             "B_KG_yk"  ,"N_yk",
+             "nobs_yk",
+             "sdB_KG_yk","sdN_yk",
+             "seB_KG_yk","seN_yk") %>%
+      left_join(totalB_N_SEBS%>%
+                  select("REGION","YEAR","SPECIES_CODE",
+                         "B_KG_y"  ,"N_y",
+                         "nobs",
+                         "sdB_KG_y","sdN_y",
+                         "seB_KG_y","seN_y"))
+    tmpP<-propByStrata_SEBS
+    # "prop B in a given strata": use this when collapsing strata specific values up to the regional level:
+    tmpP$propB_yk     <- 0; cc<- which(tmpP$B_KG_y>0)
+    tmpP$propB_yk[cc] <- tmpP$B_KG_yk[cc]/tmpP$B_KG_y[cc]
+    tmpP$propN_yk     <- 0;cc<- which(tmpP$N_y>0)
+    tmpP$propN_yk[cc] <- tmpP$N_yk[cc]/tmpP$N_y[cc] 
+    propByStrata_SEBS <- tmpP%>%ungroup()
+    rm(tmpP)
  # Step 3. Get proportion of total biomass by bin by station i 
  # ----------------------------------------- 
 
@@ -321,7 +352,7 @@ get_CPUE_DATA     <- function(
            sdN_ykl      = sdCPUE_NUMKM2_ykl*AREA,
            seB_KG_ykl   = seCPUE_KGKM2_ykl*AREA,
            seN_ykl      = seCPUE_NUMKM2_ykl*AREA)%>%
-    left_join(STRATA_AREAIN%>%rename(AREA2=AREA))%>%
+    left_join(sub_SA%>%rename(AREA2=AREA))%>%
     left_join(species_lkup%>%
                 rename(CN=COMMON_NAME,SN = SPECIES_NAME)%>%
                 select(SPECIES_CODE,CN,SN,sp,num,NAME))%>%ungroup()
@@ -333,11 +364,11 @@ get_CPUE_DATA     <- function(
               sumAREA_y       = sum(AREA,na.rm=T),
               sumB_KG_ykl     = sum(B_KG_ykl,na.rm=T),
               sumN_ykl        = sum(N_ykl,na.rm=T))%>%
-    left_join(totalB_N)%>%
+    left_join(totalB_N_SEBS_NBS)%>%
     ungroup()
   
   # divide by the sum of all biomass to rescale
-  mnCPUE_strata_bin_yr <- mnCPUE_strata_bin_yr%>%
+  mnCPUE_strata_bin_yr_SEBS_NBS<-mnCPUE_strata_bin_yr%>%
     left_join(tmp)%>%
     mutate(B_KG_ykl     = (B_KG_y/sumB_KG_ykl)*B_KG_ykl,
            N_ykl        = (N_y/sumN_ykl)*N_ykl,
@@ -347,8 +378,10 @@ get_CPUE_DATA     <- function(
            seN_ykl      = (N_y/sumN_ykl)*seN_ykl)%>%
     ungroup()
   
+
+  
   #Total Biomass and abundance for NBS+SEBS annually
-  total_bin_B_N <- mnCPUE_strata_bin_yr%>%
+  total_bin_B_N_SEBS_NBS <- mnCPUE_strata_bin_yr_SEBS_NBS%>%
     group_by(REGION,YEAR,SPECIES_CODE,CN,SN,sp,num,NAME,BIN,BIN_mm)%>%
     summarize(nobs_yl   = sum(nobs_ykl),
               sumAREA_yl = sum(AREA,na.rm=T),
@@ -360,46 +393,150 @@ get_CPUE_DATA     <- function(
               seN_yl     = sum(seN_ykl,na.rm=T))%>%
     ungroup()
   
-  propByStrataBin <- mnCPUE_strata_bin_yr%>%
+
+  rm(mnCPUE_strata_bin_yr)
+  rm(tmp)
+  
+  propByStrataBin_SEBS_NBS <- mnCPUE_strata_bin_yr_SEBS_NBS%>%
     select("REGION","YEAR","STRATUM",SPECIES_CODE,CN,SN,sp,num,NAME,
            "BIN","BIN_mm", "B_KG_ykl"  ,"N_ykl",
            "nobs_ykl","sdB_KG_ykl","sdN_ykl","seB_KG_ykl","seN_ykl") %>%
-    left_join(totalB_N%>%
+    left_join(totalB_N_SEBS_NBS%>%
                 select("REGION","YEAR","SPECIES_CODE", "B_KG_y"  ,"N_y",
                        "nobs","sdB_KG_y","sdN_y","seB_KG_y","seN_y"))
   
-  tmpP <- propByStrataBin
+  tmpP<-propByStrataBin_SEBS_NBS
   # "prop B in a given strata and length bin": use this when collapsing dbin and strata specific values up to the regional level:
   tmpP$propB_ykl     <- 0; cc<- which(tmpP$B_KG_y>0)
   tmpP$propB_ykl[cc] <- tmpP$B_KG_ykl[cc]/tmpP$B_KG_y[cc]
   rm(cc)
   tmpP$propN_ykl     <- 0;cc<- which(tmpP$N_y>0)
   tmpP$propN_ykl[cc] <- tmpP$N_ykl[cc]/tmpP$N_y[cc] 
-  propByStrataBin<-tmpP%>%ungroup()
+  propByStrataBin_SEBS_NBS<-tmpP%>%ungroup()
   rm(tmpP)
   
-  propByBin <- total_bin_B_N%>%
+  propByBin_SEBS_NBS <- total_bin_B_N_SEBS_NBS%>%
     select("REGION","YEAR",SPECIES_CODE,CN,SN,sp,num,NAME,"BIN","BIN_mm",
            "nobs_yl",
            "B_KG_yl"  ,"N_yl",
            "nobs_yl",
            "sdB_KG_yl","sdN_yl",
            "seB_KG_yl","seN_yl") %>%
-    left_join(totalB_N%>%
+    left_join(totalB_N_SEBS_NBS%>%
                 select("REGION","YEAR","SPECIES_CODE",
                        "B_KG_y"  ,"N_y",
                        "nobs",
                        "sdB_KG_y","sdN_y",
                        "seB_KG_y","seN_y"))%>%ungroup()
-  tmpP<-propByBin
+  tmpP<-propByBin_SEBS_NBS
   # "prop B in a given bin": use this when collapsing bin specific values up to the regional level:
   tmpP$propB_yl     <- 0; cc<- which(tmpP$B_KG_y>0)
   tmpP$propB_yl[cc] <- tmpP$B_KG_yl[cc]/tmpP$B_KG_y[cc]
   tmpP$propN_yl     <- 0;cc<- which(tmpP$N_y>0)
   tmpP$propN_yl[cc] <- tmpP$N_yl[cc]/tmpP$N_y[cc] 
-  propByBin <- tmpP%>%ungroup()
+  propByBin_SEBS_NBS <- tmpP%>%ungroup()
   rm(tmpP)
   
+
+  
+  # Now for SEBS 
+  # -----------------------------------------------
+  # get mean CPUE by strata and bin First for NEBS and SEBS combined
+  mnCPUE_strata_bin_yr <- CPUE_station_bin_yr%>%
+    filter(!is.na(STRATUM),!STRATUM%in%NEBSStrataIN)%>%
+    group_by(REGION,YEAR,STRATUM,SPECIES_CODE,BIN,BIN_mm)%>%
+    summarize(
+      AREA              = mean(AREA, na.rm=T),
+      nobs_ykl          = length(bin_CPUE_KGKM2),
+      mnCPUE_KGKM2_ykl  = mean(bin_CPUE_KGKM2,na.rm=T),
+      mnCPUE_NUMKM2_ykl = mean(bin_CPUE_NUMKM2,na.rm=T),
+      sdCPUE_KGKM2_ykl  = sd(bin_CPUE_KGKM2,na.rm=T),
+      sdCPUE_NUMKM2_ykl = sd(bin_CPUE_NUMKM2,na.rm=T),
+      seCPUE_KGKM2_ykl  = se(bin_CPUE_KGKM2,na.rm=T),
+      seCPUE_NUMKM2_ykl = se(bin_CPUE_NUMKM2,na.rm=T))%>%
+    mutate(B_KG_ykl     = mnCPUE_KGKM2_ykl*AREA,
+           N_ykl        = mnCPUE_NUMKM2_ykl*AREA,
+           sdB_KG_ykl   = sdCPUE_KGKM2_ykl*AREA,
+           sdN_ykl      = sdCPUE_NUMKM2_ykl*AREA,
+           seB_KG_ykl   = seCPUE_KGKM2_ykl*AREA,
+           seN_ykl      = seCPUE_NUMKM2_ykl*AREA)%>%
+    left_join(sub_SA%>%rename(AREA2=AREA))%>%
+    left_join(species_lkup%>%
+                rename(CN=COMMON_NAME,SN = SPECIES_NAME)%>%
+                select(SPECIES_CODE,CN,SN,sp,num,NAME))%>%ungroup()
+  
+  # get totals for each strata and bin
+  tmp<-mnCPUE_strata_bin_yr%>%ungroup()%>%
+    group_by(REGION,YEAR,SPECIES_CODE,CN,SN,sp,num,NAME)%>%
+    summarize(nobs_y          = sum(nobs_ykl),
+              sumAREA_y       = sum(AREA,na.rm=T),
+              sumB_KG_ykl     = sum(B_KG_ykl,na.rm=T),
+              sumN_ykl        = sum(N_ykl,na.rm=T))%>%
+    left_join(totalB_N_SEBS)%>%
+    ungroup()
+  
+  mnCPUE_strata_bin_yr_SEBS<-mnCPUE_strata_bin_yr%>%
+    left_join(tmp)%>%
+    mutate(B_KG_ykl     = (B_KG_y/sumB_KG_ykl)*B_KG_ykl,
+           N_ykl        = (N_y/sumN_ykl)*N_ykl,
+           sdB_KG_ykl   = (B_KG_y/sumB_KG_ykl)*sdB_KG_ykl,
+           sdN_ykl      = (N_y/sumN_ykl)*sdN_ykl,
+           seB_KG_ykl   = (B_KG_y/sumB_KG_ykl)*seB_KG_ykl,
+           seN_ykl      = (N_y/sumN_ykl)*seN_ykl)%>%
+    ungroup()
+  
+  #Total Biomass and abundance for SEBS only annually
+  total_bin_B_N_SEBS <- mnCPUE_strata_bin_yr_SEBS%>%
+    group_by(REGION,YEAR,SPECIES_CODE,CN,SN,sp,num,NAME,BIN,BIN_mm)%>%
+    summarize(nobs_yl   = sum(nobs_ykl),
+              sumAREA_yl = sum(AREA,na.rm=T),
+              B_KG_yl    = sum(B_KG_ykl,na.rm=T),
+              N_yl       = sum(N_ykl,na.rm=T),
+              sdB_KG_yl  = sum(sdB_KG_ykl,na.rm=T),
+              sdN_yl     = sum(sdN_ykl,na.rm=T),
+              seB_KG_yl  = sum(seB_KG_ykl,na.rm=T),
+              seN_yl     = sum(seN_ykl,na.rm=T))%>%ungroup()
+  
+
+  propByStrataBin_SEBS <- mnCPUE_strata_bin_yr_SEBS%>%
+    select("REGION","YEAR","STRATUM",SPECIES_CODE,CN,SN,sp,num,NAME,
+           "BIN","BIN_mm", "B_KG_ykl"  ,"N_ykl",
+           "nobs_ykl","sdB_KG_ykl","sdN_ykl","seB_KG_ykl","seN_ykl") %>%
+    left_join(totalB_N_SEBS%>%
+                select("REGION","YEAR","SPECIES_CODE", "B_KG_y"  ,"N_y",
+                       "nobs","sdB_KG_y","sdN_y","seB_KG_y","seN_y"))
+  
+    tmpP <- propByStrataBin_SEBS
+    
+    # "prop B in a given strata and length bin": use this when collapsing dbin and strata specific values up to the regional level:
+    tmpP$propB_ykl     <- 0; cc <- which(tmpP$B_KG_y>0)
+    tmpP$propB_ykl[cc] <- tmpP$B_KG_ykl[cc]/tmpP$B_KG_y[cc]
+    tmpP$propN_ykl     <- 0;cc<- which(tmpP$N_y>0)
+    tmpP$propN_ykl[cc] <- tmpP$N_ykl[cc]/tmpP$N_y[cc] 
+    propByStrataBin_SEBS <- tmpP%>%ungroup()
+    rm(tmpP)
+
+    propByBin_SEBS <- total_bin_B_N_SEBS%>%
+      select("REGION","YEAR",SPECIES_CODE,CN,SN,sp,num,NAME,"BIN","BIN_mm",
+             "nobs_yl",
+             "B_KG_yl"  ,"N_yl",
+             "nobs_yl",
+             "sdB_KG_yl","sdN_yl",
+             "seB_KG_yl","seN_yl") %>%
+      left_join(totalB_N_SEBS%>%
+                  select("REGION","YEAR","SPECIES_CODE",
+                         "B_KG_y"  ,"N_y",
+                         "nobs",
+                         "sdB_KG_y","sdN_y",
+                         "seB_KG_y","seN_y"))%>%ungroup()
+    tmpP <- propByBin_SEBS
+    # "prop B in a given bin": use this when collapsing bin specific values up to the regional level:
+    tmpP$propB_yl     <- 0; cc<- which(tmpP$B_KG_y>0)
+    tmpP$propB_yl[cc] <- tmpP$B_KG_yl[cc]/tmpP$B_KG_y[cc]
+    tmpP$propN_yl     <- 0;cc<- which(tmpP$N_y>0)
+    tmpP$propN_yl[cc] <- tmpP$N_yl[cc]/tmpP$N_y[cc] 
+    propByBin_SEBS    <- tmpP%>%ungroup()
+    rm(tmpP)
   
     checkit <-function(x){
       if(round(max(x ),1)!=1) {
@@ -410,7 +547,7 @@ get_CPUE_DATA     <- function(
     }
 
     #double check the results
-    cnt_ByStrataBin <- propByStrataBin%>%
+    cnt_ByStrataBin_SEBS_NBS <- propByStrataBin_SEBS_NBS%>%
       select("REGION","YEAR","STRATUM",BIN,BIN_mm,
              SPECIES_CODE,CN,SN,sp,num,
              "propB_ykl","propN_ykl")%>%
@@ -418,61 +555,110 @@ get_CPUE_DATA     <- function(
       summarise(sum_propB_ykl=sum(propB_ykl,na.rm=T),
                 sum_propN_ykl=sum(propN_ykl,na.rm=T))
    
-    checkit(cnt_ByStrataBin$sum_propB_ykl)
+    checkit(cnt_ByStrataBin_SEBS_NBS$sum_propB_ykl)
     
-  
+    cnt_ByStrataBin_SEBS <- propByStrataBin_SEBS%>%
+      select("REGION","YEAR","STRATUM",BIN,BIN_mm,
+             SPECIES_CODE,CN,SN,sp,num,
+             "propB_ykl","propN_ykl")%>%
+      group_by(YEAR,REGION,SN,CN)%>%
+      summarise(sum_propB_ykl=sum(propB_ykl,na.rm=T),
+                sum_propN_ykl=sum(propN_ykl,na.rm=T))
+    checkit(cnt_ByStrataBin_SEBS$sum_propB_ykl)
     
-    cnt_ByStrata <- propByStrata%>%
+    cnt_ByStrata_SEBS <- propByStrata_SEBS%>%
       select("REGION","YEAR","STRATUM",
              SPECIES_CODE,CN,SN,sp,num,
              "propB_yk","propN_yk")%>%
       group_by(YEAR,REGION,SN,CN)%>%
       summarise(sum_propB_yk=sum(propB_yk,na.rm=T),
                 sum_propN_yk=sum(propN_yk,na.rm=T))
-    checkit(cnt_ByStrata$sum_propB_yk)
+    checkit(cnt_ByStrata_SEBS$sum_propB_yk)
     
-  
+    cnt_ByStrata_SEBS_NBS <- propByStrata_SEBS_NBS%>%
+      select("REGION","YEAR","STRATUM",
+             SPECIES_CODE,CN,SN,sp,num,
+             "propB_yk","propN_yk")%>%
+      group_by(YEAR,REGION,SN,CN)%>%
+      summarise(sum_propB_yk=sum(propB_yk,na.rm=T),
+                sum_propN_yk=sum(propN_yk,na.rm=T))
+    checkit(cnt_ByStrata_SEBS_NBS$sum_propB_yk)
     
-    cnt_ByBin <- propByBin%>%
+    cnt_ByBin_SEBS <- propByBin_SEBS%>%
       select("REGION","YEAR",BIN,BIN_mm,num,
              SPECIES_CODE,CN,SN,sp,
              "propB_yl","propN_yl")%>%
       group_by(YEAR,REGION,SN,CN)%>%
       summarise(sum_propB_yl=sum(propB_yl ,na.rm=T),
                 sum_propN_yl=sum(propN_yl ,na.rm=T))
-    checkit(cnt_ByBin$sum_propB_yl)
+    
+    checkit(cnt_ByBin_SEBS$sum_propB_yl)
+    
+    cnt_ByBin_SEBS_NBS <- propByBin_SEBS_NBS%>%
+      select("REGION","YEAR",BIN,BIN_mm,num,
+             SPECIES_CODE,CN,SN,sp,
+             "propB_yl","propN_yl")%>%
+      group_by(YEAR,REGION,SN,CN)%>%
+      summarise(sum_propB_yl=sum(propB_yl ,na.rm=T),
+                sum_propN_yl=sum(propN_yl ,na.rm=T))
+    checkit(cnt_ByBin_SEBS_NBS$sum_propB_yl)
   
   rm(list=c("location","location_catch","length"))
-  cat("   -- saving results...")
+  cat("saving results...")
   if(!dir.exists(out_dir)) dir.create(out_dir)
   cpue_dir <- file.path(out_dir,"cpue")
   if(!dir.exists(cpue_dir)) dir.create(cpue_dir)
   cpue_dir <- file.path(cpue_dir,reg)
   if(!dir.exists(cpue_dir)) dir.create(cpue_dir)
-
+  # 
+  # save(totalB_N_SEBS_NBS,file = file.path(cpue_dir,paste0(flnm,".totalB_N_SEBS_NBS.Rdata")))
+  # save(totalB_N_SEBS,file = file.path(cpue_dir,paste0(flnm,".totalB_N_SEBS.Rdata")))
+  # save(mnCPUE_strata_yr,file = file.path(cpue_dir,paste0(flnm,".mnCPUE_strata_yr.Rdata")))
+  # 
+  # save(total_bin_B_N_SEBS,file = file.path(cpue_dir,paste0(flnm,".total_bin_B_N_SEBS.Rdata")))
+  # save(total_bin_B_N_SEBS_NBS,file = file.path(cpue_dir,paste0(flnm,".total_bin_B_N_SEBS_NBS.Rdata")))
+  # save(mnCPUE_strata_bin_yr,file = file.path(cpue_dir,paste0(flnm,".mnCPUE_strata_bin_yr.Rdata")))
+  # 
+  # save(CPUE_station_bin_yr,file = file.path(cpue_dir,paste0(flnm,".CPUE_station_bin_yr.Rdata")))
+  # save(CPUE_station_yr,file = file.path(cpue_dir,paste0(flnm,".CPUE_station_yr.Rdata")))
  
-  cpue_data <-list(totalB_N      = totalB_N,
+  cpue_data <-list(totalB_N_SEBS_NBS      = totalB_N_SEBS_NBS,
+                   totalB_N_SEBS          = totalB_N_SEBS,
                    mnCPUE_strata_yr       = mnCPUE_strata_yr,
-                   total_bin_B_N = total_bin_B_N,
-                   mnCPUE_strata_bin_yr = mnCPUE_strata_bin_yr%>%
+                   total_bin_B_N_SEBS     = total_bin_B_N_SEBS,
+                   total_bin_B_N_SEBS_NBS = total_bin_B_N_SEBS_NBS,
+                   mnCPUE_strata_bin_yr_SEBS     = mnCPUE_strata_bin_yr_SEBS%>%
+                     select(-"sumAREA_y",-"sumB_KG_ykl",-"sumN_ykl",-AREA2),
+                   mnCPUE_strata_bin_yr_SEBS_NBS = mnCPUE_strata_bin_yr_SEBS_NBS%>%
                      select(-"sumAREA_y",-"sumB_KG_ykl",-"sumN_ykl",-AREA2),
                    CPUE_station_bin_yr   = CPUE_station_bin_yr,
                    CPUE_station_yr       = CPUE_station_yr,
-                   propByBin    = propByBin%>%
+                   propByBin_SEBS_NBS    = propByBin_SEBS_NBS%>%
                      select("REGION","YEAR",BIN,BIN_mm,num,
                             SPECIES_CODE,CN,SN,sp,"propB_yl","propN_yl"),
-                   propByStrata = propByStrata%>%
+                   propByBin_SEBS        = propByBin_SEBS%>%
+                     select("REGION","YEAR",BIN,BIN_mm,num,
+                            SPECIES_CODE,CN,SN,sp,"propB_yl","propN_yl"),
+                   propByStrata_SEBS_NBS = propByStrata_SEBS_NBS%>%
                      select("REGION","YEAR","STRATUM",
                             SPECIES_CODE,CN,SN,sp,num,
                             "propB_yk","propN_yk"),
-                   propByStrataBin = propByStrataBin%>%
+                   propByStrata_SEBS = propByStrata_SEBS%>%
+                     select("REGION","YEAR","STRATUM",
+                            SPECIES_CODE,CN,SN,sp,num,
+                            "propB_yk","propN_yk"),
+                   propByStrataBin_SEBS = propByStrataBin_SEBS%>%
+                     select("REGION","YEAR","STRATUM",BIN,BIN_mm,
+                            SPECIES_CODE,CN,SN,sp,num,
+                            "propB_ykl","propN_ykl"),
+                   propByStrataBin_SEBS_NBS = propByStrataBin_SEBS_NBS%>%
                      select("REGION","YEAR","STRATUM",BIN,BIN_mm,
                             SPECIES_CODE,CN,SN,sp,num,
                             "propB_ykl","propN_ykl")
                    )
   save(cpue_data,file = file.path(cpue_dir,paste0(flnm,".cpue_data.Rdata")))
   
-  cat("files saved \n\n")
+  cat("files saved \n")
   return(cpue_data)
   
 }

@@ -227,3 +227,57 @@ sum(BB.CPUE_KGHA)
 		AA.SUBSAMPLE,
 		AA.DURATION , AA.DISTANCE_FISHED, AA.NET_WIDTH , AA.NET_MEASURED , AA.NET_HEIGHT ;"
 
+# #---------------------------------
+# qry_LWA_all<- paste0("SELECT SS.CRUISE,SS.REGION, HH.START_LATITUDE, 
+# 		HH.START_LONGITUDE, 
+# 		HH.STRATUM,
+# 		TT.ECOPATH_PP,
+# 		hh.start_time,
+# 		hh.gear_temperature, 
+# 		hh.surface_temperature, 
+# 		SS.SPECIES_CODE, 
+# 		NPRED.ECOPATH_Pred, 
+# 		NPRED.GOAPOLL_Pred, 
+# 		SS.SEX, 
+# 		SS.AGE, 
+# 		SS.LENGTH, 
+# 		SS.WEIGHT
+# 		--RACE_DATA.V_CRUISES.SURVEY_DEFINITION_ID
+# 		
+# 		FROM RACE_DATA.V_CRUISES,racebase.specimen SS, racebase.haul HH, foodlab.nodc NPRED,kerim_strata TT
+# 		--INNER JOIN RACEBASE.HAUL 
+# 		--ON RACE_DATA.V_CRUISES.CRUISEJOIN = RACEBASE.HAUL.CRUISEJOIN
+# 		
+# 		WHERE SS.hauljoin = HH.hauljoin AND SS.SPECIES_CODE = NPRED.race
+# 		--AND RACE_DATA.V_CRUISES.CRUISEJOIN = HH.CRUISEJOIN
+# 		--AND RACE_DATA.V_CRUISES.SURVEY_DEFINITION_ID IN (",paste0(srvys$num ,collapse=","),")
+# 		AND (HH.STRATUM = TT.STRATUM AND HH.REGION =TT.REGION) 
+# 		--AND(hh.CRUISE_TYPE = 'Race_Groundfish')
+# 		AND SS.AGE IS NOT NULL
+# 		AND (NPRED.ECOPATH_Pred <>  'NA' )
+# 		
+#     ORDER BY NPRED.GOAPOLL_Pred, SS.SEX;")
+# # cat(qry_LWA_all)
+# # sqlQuery(con,qry_LWA_all)
+# #---------------------------------------------------------------
+# 
+# qry_LW_all<- paste0(
+#   "SELECT SS.CRUISE, SS.REGION, HH.START_LATITUDE, 
+# 		HH.START_LONGITUDE, HH.STRATUM,TT.ECOPATH_PP,hh.start_time,
+# 		hh.gear_temperature, hh.surface_temperature, 
+# 		SS.SPECIES_CODE, NPRED.ECOPATH_Pred, NPRED.GOAPOLL_Pred, SS.SEX, SS.AGE, SS.LENGTH, SS.WEIGHT	
+# 		--RACE_DATA.V_CRUISES.SURVEY_DEFINITION_ID
+# 		FROM RACE_DATA.V_CRUISES,racebase.specimen SS, racebase.haul HH, foodlab.nodc NPRED,kerim_strata TT
+# 
+# 		WHERE SS.hauljoin = HH.hauljoin AND SS.SPECIES_CODE = NPRED.race
+# 		--AND RACE_DATA.V_CRUISES.CRUISEJOIN = HH.CRUISEJOIN
+# 		--AND RACE_DATA.V_CRUISES.SURVEY_DEFINITION_ID IN (",paste0(srvys$num ,collapse=","),")
+# 	  AND (HH.STRATUM = TT.STRATUM AND HH.REGION =TT.REGION) 
+# 		--AND(hh.CRUISE_TYPE = 'Race_Groundfish')
+# 
+# 		AND (NPRED.ECOPATH_Pred <>  'NA' )
+# 		    
+# 		ORDER BY NPRED.GOAPOLL_Pred, SS.SEX;")
+# 
+# #---------------------------------------------------------------
+
