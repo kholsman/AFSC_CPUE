@@ -1,112 +1,98 @@
+---
+title: "Get and summarize AFSC survey data"
+author: "Kirstin Holsman, Alaska Fisheries Science Center"
+output:
+  word_document:
+    fig_caption: yes
+    fig_width: 4
+    keep_md: yes
+  pdf_document:
+    fig_caption: yes
+    fig_height: 4
+    fig_width: 5
+    highlight: tango
+    keep_tex: yes
+    latex_engine: xelatex
+    toc: TRUE
+  header-includes:
+  - \usepackage{inputenc}
+  - \usepackage{unicode-math}
+  - \pagenumbering{gobble}
+  html_document:
+    df_print: kable
+    fig_caption: yes
+    theme: flatly
+    toc: true
+    toc_float: true
+---
+
 <!-- default, tango, pygments, kate, monochrome, espresso, zenburn, haddock, and textmate. -->
 
-#### [**AFSC Survey CPUE data: github.com/kholsman/AFSC_CPUE**](https://github.com/kholsman/AFSC_CPUE "AFSC_CPUE code Repo")
 
-Repo maintained by:  
-Kirstin Holsman  
-Alaska Fisheries Science Center  
-NOAA Fisheries, Seattle WA  
-**[kirstin.holsman@noaa.gov](kirstin.holsman@noaa.gov)**  
-*Last updated: Mar 03, 2023*
+
+#### [**AFSC Survey CPUE data: github.com/kholsman/AFSC_CPUE**](https://github.com/kholsman/AFSC_CPUE "AFSC_CPUE code Repo")  
+  Repo maintained by:  
+  Kirstin Holsman  
+  Alaska Fisheries Science Center  
+  NOAA Fisheries, Seattle WA  
+  **[kirstin.holsman@noaa.gov](kirstin.holsman@noaa.gov)**  
+  *Last updated: Jul 13, 2023*
 
 # Overview
 
-The below scripts return a list object cpue_data saved as a compressed
-Rdata file with the naming ‘reg.srvy#.spp.cpue_data.Rdata’ such as
-“ebs.srvy98.plk.cpue_data.Rdata”. Each cpue_data list contains 8
-data.frames:
+The below scripts return a list object cpue_data saved as a compressed Rdata file with the naming 'reg.srvy#.spp.cpue_data.Rdata' such as "ebs.srvy98.plk.cpue_data.Rdata". Each cpue_data list contains 8 data.frames:
 
-``` r
+
+```r
 load(paste0("data/out/",qrydate,"/cpue/ebs/ebs.srvy98.plk.cpue_data.Rdata"))
 
 names(cpue_data)
 ```
+ 
+There is a folder for each region "ebs", "goa", "ai". For the "ebs" (Bering Sea) there are two sets of cpue_data, one that is NEBS+SEBS combined ('ebs.srvy98.[sp].cpue_data.Rdata') and one that is just SEBS survey areas ('sebs.srvy98.[sp].cpue_data.Rdata'). For both the Gulf of Alaska ("goa") and the Bering Sea, mean CPUE (Kg per km2 or Number per km2) for each size bin at each strata was calculated and then multiplied by the STRATA area to get total Biomass and abundance. 
+**Note:Since strata area estimates where not available for the Aleutian Island ("ai") or slope surveys ("slope") these AREA was set equal to 1 and the Total Biomass and abundance is actually the sum of mean biomass. **
 
-There is a folder for each region “ebs”, “goa”, “ai”. For the “ebs”
-(Bering Sea) there are two sets of cpue_data, one that is NEBS+SEBS
-combined (‘ebs.srvy98.\[sp\].cpue_data.Rdata’) and one that is just SEBS
-survey areas (‘sebs.srvy98.\[sp\].cpue_data.Rdata’). For both the Gulf
-of Alaska (“goa”) and the Bering Sea, mean CPUE (Kg per km2 or Number
-per km2) for each size bin at each strata was calculated and then
-multiplied by the STRATA area to get total Biomass and abundance.
-**Note:Since strata area estimates where not available for the Aleutian
-Island (“ai”) or slope surveys (“slope”) these AREA was set equal to 1
-and the Total Biomass and abundance is actually the sum of mean biomass.
-**
 
 The data.frames within each cpue_data object are:
 
-1.  **totalB_N**: Total biomass (kg) or abundance (# of fish) for the
-    species in each year  
-2.  **mnCPUE_strata_yr** : Average survey CPUE (kg per Km2) or abundance
-    (# per Km2) for the species in each strata and year  
-3.  **total_bin_B\_N**: Total biomass (kg) or abundance (# of fish) for
-    each bin (10 mm) for the species in each year  
-4.  **mnCPUE_strata_bin_yr** : Average survey CPUE (kg per Km2) or
-    abundance (# per Km2) for each size bin for the species in each
-    strata and year
-5.  **CPUE_station_bin_yr**: Station specific survey CPUE (kg per Km2)
-    or abundance (# per Km2) for each size bin for the species in each
-    year  
-6.  **CPUE_station_yr**: Station specific survey CPUE (kg per Km2) or
-    abundance (# per Km2) for the species in each year  
-7.  **propByBin**: proportion of biomass in each size bin per species
-    per year  
-8.  **propByStrata**: proportion of biomass in each strata per species
-    per year
-9.  **propByStrataBin**: proportion of biomass in each bin and strata
-    per species per year
+1. **totalB_N**: Total biomass (kg) or abundance (# of fish) for the species in each year  
+2. **mnCPUE_strata_yr** : Average survey CPUE (kg per Km2) or abundance (# per Km2) for the species in each strata and year  
+3. **total_bin_B_N**: Total biomass (kg) or abundance (# of fish) for each bin (10 mm) for the species in each year   
+4. **mnCPUE_strata_bin_yr** : Average survey CPUE (kg per Km2) or abundance (# per Km2) for each size bin for the species in each strata and year
+5. **CPUE_station_bin_yr**: Station specific survey CPUE (kg per Km2) or abundance (# per Km2) for each size bin for the species in each year    
+6. **CPUE_station_yr**: Station specific survey CPUE (kg per Km2) or abundance (# per Km2) for the species in each year  
+7. **propByBin**: proportion of biomass in each size bin per species per year  
+8. **propByStrata**: proportion of biomass in each strata per species per year
+9. **propByStrataBin**: proportion of biomass in each bin and strata per species per year
 
-![EBS strata from Kearney et al. 2021
-<https://zenodo.org/record/4586950/files/Bering10K_dataset_documentation.pdf>](figs/Kearney_2023.jpg)
-These are calculated from the RACEBASE data tables for survey results
-where total CPUE was recorded for the species *s* (location_catch) at
-each haul, expanded to include stations *i* where CPUE=0 (location) and
-expanded to each size bin *l* using the proportional subset of frequency
-of fish of given length (mm), binned into 10 mm bins (*l*) and predicted
-weight (*Ŵ*) for each size bin *l* at each station *i*:
+![EBS strata from Kearney et al. 2021 https://zenodo.org/record/4586950/files/Bering10K_dataset_documentation.pdf](figs/Kearney_2023.jpg)
+These are calculated from the RACEBASE data tables for survey results where total CPUE was recorded for the species $s$ (location_catch) at each haul, expanded to include stations $i$ where CPUE=0 (location) and expanded to each size bin $l$ using the proportional subset of frequency of fish of given length (mm), binned into 10 mm bins ($l$) and predicted weight ($\hat{W}$) for each size bin $l$ at each station $i$:
 
-$$B\_{s,y} =  \\bar{CPUE\_{s,k,y}} \\dot{}A\_{k}$$
-where *A*<sub>*k*</sub> is the area of the strata *k* in
-*K**m*<sup>2</sup> and $\\bar{CPUE\_{s,k,y}}$ is the strata specific
-average CPUE (kg per *K**m*<sup>2</sup> or number per
-*K**m*<sup>2</sup>) of all stations *i* in strata *k*:
-$$\\bar{CPUE\_{s,k,y}} = \\frac{1}{n_k}\\dot{}\\sum\_{n_k}{CPUE\_{s,k,y,i}}$$
-  
-where *C**P**U**E*<sub>*s*, *k*, *y*, *i*</sub> is the station specific
-CPUE (saved as the object `cpue_data$CPUE_station_yr`).
+$$B_{s,y} =  \bar{CPUE_{s,k,y}} \dot{}A_{k}$$
+where $A_{k}$ is the area of the strata $k$ in $Km^2$ and $\bar{CPUE_{s,k,y}}$ is the strata specific average CPUE (kg per $Km^2$ or number per $Km^2$) of all stations $i$ in strata $k$:
+$$\bar{CPUE_{s,k,y}} = \frac{1}{n_k}\dot{}\sum_{n_k}{CPUE_{s,k,y,i}}$$  
+where $CPUE_{s,k,y,i}$ is the station specific CPUE (saved as the object `cpue_data$CPUE_station_yr`).
 
-To obtain population level estimates of the biomass or abundance of fish
-by size bin *l*, we used a length weight regression to estimate the
-weight of each size fish *j* measured (*Ŵ*) to calculate the proportion
-by weight or frequency at each station where
-*Ŵ* = *α*<sub>*s*</sub> + *L*<sub>*j*</sub><sup>*β*<sub>*s*</sub></sup>
-where *α*<sub>*s*</sub> and *β*<sub>*s*</sub> are fit (updated each
-year) to all available length and weight data from surveys from all
-years across the EBS, GOA, and AI (rather than each basin separately)
-and
-$$p^w\_{l,i} = \\frac{N\_{l,i}\\dot{}\\hat{\\bar{W\_{l,i}}}}{\\sum\_{}{N\_{l,i}\\dot{}\\hat{\\bar{W\_{l,i}}}}}$$
+To obtain population level estimates of the biomass or abundance of fish by size bin $l$, we used a length weight regression to estimate the weight of each size fish $j$ measured ($\hat{W}$) to calculate the proportion by weight or frequency at each station where
+$$\hat{W} = \alpha_s+L_j^{\beta_s} $$
+where $\alpha_s$ and $\beta_s$ are fit (updated each year) to all available length and weight data from surveys from all years across the EBS, GOA, and AI (rather than each basin separately) and
+$$p^w_{l,i} = \frac{N_{l,i}\dot{}\hat{\bar{W_{l,i}}}}{\sum_{}{N_{l,i}\dot{}\hat{\bar{W_{l,i}}}}}$$
 and  
-$$p^N\_{l,i} = \\frac{N\_{l,i}}{\\sum\_{}{N\_{l,i}}}$$
-This was then multiplied by the CPUE at each station
-(*C**P**U**E*<sub>*s*, *k*, *y*, *i*</sub>) to obtain a station estimate
-of CPUE by size bin *l*:
-$$CPUE\_{s,k,y,l,i} = p^N\_{l,i}\\dot{}CPUE\_{s,k,y,i}$$
+$$p^N_{l,i} = \frac{N_{l,i}}{\sum_{}{N_{l,i}}}$$
+This was then multiplied by the CPUE at each station ($CPUE_{s,k,y,i}$) to obtain a station estimate of CPUE by size bin $l$:
+$$CPUE_{s,k,y,l,i} = p^N_{l,i}\dot{}CPUE_{s,k,y,i}$$
 
-Finally, the average strata CPUE
-(*m**n**C**P**U**E*<sub>*s*, *k*, *y*, *l*</sub>) was calculated as:
-$${mnCPUE\_{s,k,y,l}} = \\frac{1}{n_k}\\dot{}\\sum\_{n_k}{CPUE\_{s,k,y,l,i}}$$
-and strata- and bin-specific biomass (Kg) was calculated the product of
-mean CPUE (Kg per Km^2) and strata area (Km^2):
-$$B\_{s,y,k,l}= {mnCPUE\_{s,k,y,l}}\\dot{}A\_{k}$$
+Finally, the average strata CPUE (${mnCPUE_{s,k,y,l}}$) was calculated as:
+$${mnCPUE_{s,k,y,l}} = \frac{1}{n_k}\dot{}\sum_{n_k}{CPUE_{s,k,y,l,i}}$$
+and strata- and bin-specific biomass (Kg) was calculated the product of mean CPUE (Kg per Km^2) and strata area (Km^2):
+$$B_{s,y,k,l}= {mnCPUE_{s,k,y,l}}\dot{}A_{k}$$
 
-and total annual biomass by bin is the sum of strata-specific biomass
-for each species:
+and total annual biomass by bin is the sum of strata-specific biomass for each species:
 
-*B*<sub>*s*, *y*, *l*</sub> = ∑<sub>*n*<sub>*k*</sub></sub>*B*<sub>*s*, *y*, *k*, *l*</sub>
+$$B_{s,y,l}= \sum_{n_k}{B_{s,y,k,l}}$$
 and total annual biomass is:
 
-*B*<sub>*s*, *y*</sub> = ∑<sub>*n*<sub>*l*</sub></sub>∑<sub>*n*<sub>*k*</sub></sub>*B*<sub>*s*, *y*, *k*, *l*</sub>
+$$B_{s,y}= \sum_{n_l}{\sum_{n_k}{B_{s,y,k,l}}}$$
 
 # Comparison of Bering Sea survey values
 
@@ -114,11 +100,13 @@ and total annual biomass is:
 
 ![](figs/pcod_srvy.jpg)
 
-![“arrowtooth”](figs/atf_srvy.jpg)
+!["arrowtooth"](figs/atf_srvy.jpg)
 
-# Code
 
-``` r
+# Code  
+
+
+```r
 # ## Step 0: Set up the R workspace
 # 
 # The first step is to set up the switches for what files to update and create in the file `R/setup.R`. The code below then loads these settings as well as base data, functions, and packages. 
@@ -209,7 +197,7 @@ and total annual biomass is:
   # update the LW regressions 
   #---------------------------------------------  
 
-  if(update_LWdata){    
+  if(update_LWdata){ 	
      source(file.path(code.path,"R/sub_scripts/updateLW.R"))
      # reload with updated data:
      source(file.path(code.path,"R/load_data.R"))
@@ -409,6 +397,17 @@ checkit <-function(x){
 # 
 ```
 
+
+
+
+
+
+
+
 ## Appendix 1: `R/setup.R`primary setup script
 
 <!-- ![](figs/setup_large.jpg){width=90%} -->
+
+
+
+

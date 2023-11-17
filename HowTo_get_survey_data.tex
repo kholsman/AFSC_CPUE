@@ -4,10 +4,6 @@
 %
 \documentclass[
 ]{article}
-\title{Get and summarize AFSC survey data}
-\author{Kirstin Holsman, Alaska Fisheries Science Center}
-\date{}
-
 \usepackage{amsmath,amssymb}
 \usepackage{lmodern}
 \usepackage{iftex}
@@ -37,14 +33,6 @@
   \KOMAoptions{parskip=half}}
 \makeatother
 \usepackage{xcolor}
-\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
-\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
-\hypersetup{
-  pdftitle={Get and summarize AFSC survey data},
-  pdfauthor={Kirstin Holsman, Alaska Fisheries Science Center},
-  hidelinks,
-  pdfcreator={LaTeX via pandoc}}
-\urlstyle{same} % disable monospaced font for URLs
 \usepackage[margin=1in]{geometry}
 \usepackage{color}
 \usepackage{fancyvrb}
@@ -106,6 +94,18 @@
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdftitle={Get and summarize AFSC survey data},
+  pdfauthor={Kirstin Holsman, Alaska Fisheries Science Center},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Get and summarize AFSC survey data}
+\author{Kirstin Holsman, Alaska Fisheries Science Center}
+\date{}
 
 \begin{document}
 \maketitle
@@ -124,7 +124,7 @@ Kirstin Holsman\\
 Alaska Fisheries Science Center\\
 NOAA Fisheries, Seattle WA\\
 \textbf{\url{kirstin.holsman@noaa.gov}}\strut \\
-\emph{Last updated: Mar 03, 2023}
+\emph{Last updated: Jul 25, 2023}
 
 \hypertarget{overview}{%
 \section{Overview}\label{overview}}
@@ -190,50 +190,53 @@ The data.frames within each cpue\_data object are:
   per species per year
 \end{enumerate}
 
-\includegraphics{figs/Kearney_2023.jpg} These are calculated from the
-RACEBASE data tables for survey results where total CPUE was recorded
-for the species \(s\) (location\_catch) at each haul, expanded to
-include stations \(i\) where CPUE=0 (location) and expanded to each size
-bin \(l\) using the proportional subset of frequency of fish of given
-length (mm), binned into 10 mm bins (\(l\)) and predicted weight
-(\(\hat{W}\)) for each size bin \(l\) at each station \(i\):
+\includegraphics{figs/Kearney_2023.jpg} To obtain population level
+estimates of the biomass or abundance of fish by size bin \(l\), we used
+a length weight regression to estimate the weight of each size fish
+\(j\) measured (\(\hat{W}\)) to calculate the proportion by weight or
+frequency at each station where \[\hat{W_j} = \alpha_s+L_j^{\beta_s} \]
 
-\[B_{s,y} =  \bar{CPUE_{s,k,y}} \dot{}A_{k}\] where \(A_{k}\) is the
-area of the strata \(k\) in \(Km^2\) and \(\bar{CPUE_{s,k,y}}\) is the
-strata specific average CPUE (kg per \(Km^2\) or number per \(Km^2\)) of
-all stations \(i\) in strata \(k\):
-\[\bar{CPUE_{s,k,y}} = \frac{1}{n_k}\dot{}\sum_{n_k}{CPUE_{s,k,y,i}}\]\\
-where \(CPUE_{s,k,y,i}\) is the station specific CPUE (saved as the
-object \texttt{cpue\_data\$CPUE\_station\_yr}).
+where the species-specific (\(s\)) slope and intercept values
+(\(\beta_s\) and \(\alpha_s\), respectively) were fit to all available
+length and weight data from surveys from all years across the EBS, GOA,
+and AI (rather than each basin separately).
 
-To obtain population level estimates of the biomass or abundance of fish
-by size bin \(l\), we used a length weight regression to estimate the
-weight of each size fish \(j\) measured (\(\hat{W}\)) to calculate the
-proportion by weight or frequency at each station where
-\[\hat{W} = \alpha_s+L_j^{\beta_s} \] where \(\alpha_s\) and \(\beta_s\)
-are fit (updated each year) to all available length and weight data from
-surveys from all years across the EBS, GOA, and AI (rather than each
-basin separately) and
-\[p^w_{l,i} = \frac{N_{l,i}\dot{}\hat{\bar{W_{l,i}}}}{\sum_{}{N_{l,i}\dot{}\hat{\bar{W_{l,i}}}}}\]
-and\\
-\[p^N_{l,i} = \frac{N_{l,i}}{\sum_{}{N_{l,i}}}\] This was then
-multiplied by the CPUE at each station (\(CPUE_{s,k,y,i}\)) to obtain a
-station estimate of CPUE by size bin \(l\):
-\[CPUE_{s,k,y,l,i} = p^N_{l,i}\dot{}CPUE_{s,k,y,i}\]
+The number and biomass (\(hat{W_j}\)) for each 1 (mm) length was summed
+into 10 mm size bins \(l\) and expanded to include stations and bins
+where CPUE = 0 (saved as the object
+\texttt{cpue\_data\$CPUE\_station\_bin\_yr}). Bin-specific catch
+\(\bar{CPUE}_{s,k,y,l}\) (kg per \(Km^2\) or number per \(Km^2\)) of all
+stations \(i\) in strata \(k\) for size bin \(l\) (saved as the object
+\texttt{cpue\_data\$mnCPUE\_strata\_bin\_yr})::
+\[\bar{CPUE}^{B|N}_{s,k,y,l}=\frac{1}{n_k}\sum_{n_k}{CPUE^{B|N}_{s,k,y,l,i}}\]
 
-Finally, the average strata CPUE (\({mnCPUE_{s,k,y,l}}\)) was calculated
-as:
-\[{mnCPUE_{s,k,y,l}} = \frac{1}{n_k}\dot{}\sum_{n_k}{CPUE_{s,k,y,l,i}}\]
-and strata- and bin-specific biomass (Kg) was calculated the product of
-mean CPUE (Kg per Km\^{}2) and strata area (Km\^{}2):
-\[B_{s,y,k,l}= {mnCPUE_{s,k,y,l}}\dot{}A_{k}\]
+and where \(CPUE^B_{s,k,y,l,i} = \sum_{n_l}\hat{W}_j\) and
+\(CPUE^N_{s,k,y,l,i} = \sum_{n_l}1\) are the station specific CPUEs for
+biomass and abundance of fish in size bin l (respectively). CPUE was
+converted to total strata- and bin-specific biomass (\$B\_\{s,k,y,l\}
+\$) by multiplying the strata average catch for each species and bin by
+the strata area \(A_{k}\) ( \(Km2\); saved as the object
+\texttt{cpue\_data\$total\_bin\_B\_N}):
 
-and total annual biomass by bin is the sum of strata-specific biomass
-for each species:
+\[B_{s,k,y,l} =  \bar{CPUE}^{B}_{s,k,y,l} \dot{}A_{k}\] and
+\[N_{s,k,y,l} =  \bar{CPUE}^{N}_{s,k,y,l} \dot{}A_{k}\]
 
-\[B_{s,y,l}= \sum_{n_k}{B_{s,y,k,l}}\] and total annual biomass is:
+We then calculated the proportion of total annual abundance
+(\(N_{s,y}= \sum_k{\sum_l{N_{s,k,y,l}}}\)) or biomass
+(\(B_{s,y}= \sum_k{\sum_l{B_{s,k,y,l}}}\); saved as
+\texttt{cpue\_data\$totalB\_N}) of each species and bin \(l\) in each
+strata \(k\) as (saved as the object
+\texttt{cpue\_data\$propByStrataBin}):
 
-\[B_{s,y}= \sum_{n_l}{\sum_{n_k}{B_{s,y,k,l}}}\]
+\[p^N_{s,k,y,l} = \frac{N_{s,k,y,l}}{ \sum_k{\sum_l{N_{s,k,y,l}}}}\] and
+\[p^B_{s,k,y,l} = \frac{B_{s,k,y,l}}{ \sum_k{\sum_l{B_{s,k,y,l}}}}\] and
+the proportion of total annual biomass (or abundance) of each species in
+each strata as (saved as the object \texttt{cpue\_data\$propByStrata}):
+\[p^B_{s,k,y} = \frac{\sum_l({B_{s,k,y,l}})}{ \sum_k{\sum_l{B_{s,k,y,l}}}}\]
+
+and the proportion of total annual biomass of each species in each bin
+l: (saved as the object \texttt{cpue\_data\$propByBin}):
+\[p^B_{s,k,l} = \frac{\sum_k({B_{s,k,y,l}})}{ \sum_k{\sum_l{B_{s,k,y,l}}}}\]
 
 \hypertarget{comparison-of-bering-sea-survey-values}{%
 \section{Comparison of Bering Sea survey
@@ -491,7 +494,212 @@ values}\label{comparison-of-bering-sea-survey-values}}
 
 \NormalTok{    \}}
 \NormalTok{  \}}
-\CommentTok{\#   }
+  
+\CommentTok{\# Now make BT and SST files for strata, station and all basin}
+  
+
+  \CommentTok{\# srvys \textless{}{-} data.frame(reg=c("ebs","goa","ai"),RGN = c("BS","GOA","AI"), num=c(98,47,52)  )}
+\NormalTok{  nreg }\OtherTok{\textless{}{-}} \FunctionTok{length}\NormalTok{(srvys}\SpecialCharTok{$}\NormalTok{reg)}
+
+\NormalTok{  na.length }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(x,}\AttributeTok{na.rm=}\NormalTok{F)\{}
+    \ControlFlowTok{if}\NormalTok{(na.rm }\SpecialCharTok{==}\NormalTok{ T)}
+       \ControlFlowTok{if}\NormalTok{(}\FunctionTok{any}\NormalTok{(}\FunctionTok{is.na}\NormalTok{(x)))}
+\NormalTok{         x }\OtherTok{\textless{}{-}}\NormalTok{ x[}\SpecialCharTok{!}\FunctionTok{is.na}\NormalTok{(x)]}
+   \FunctionTok{return}\NormalTok{( }\FunctionTok{length}\NormalTok{(x))}
+\NormalTok{  \}}
+\NormalTok{  i }\OtherTok{\textless{}{-}}\DecValTok{0}
+  \ControlFlowTok{for}\NormalTok{(regfl }\ControlFlowTok{in}\NormalTok{ srvys[,}\DecValTok{1}\NormalTok{] )\{}
+    \ControlFlowTok{if}\NormalTok{(regfl}\SpecialCharTok{!=}\StringTok{"slope"}\NormalTok{)\{}
+\NormalTok{    i }\OtherTok{\textless{}{-}}\NormalTok{ i }\SpecialCharTok{+}\DecValTok{1}
+    \FunctionTok{load}\NormalTok{(}\FunctionTok{file.path}\NormalTok{(data.path,regfl,}\StringTok{"plk/location.Rdata"}\NormalTok{))}
+    
+\NormalTok{    tmp}\OtherTok{\textless{}{-}}\NormalTok{location}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{group\_by}\NormalTok{(YEAR,STRATUM,STATIONID)}\SpecialCharTok{\%\textgreater{}\%}
+      \FunctionTok{summarize}\NormalTok{(}
+        \AttributeTok{TEMP=}\FunctionTok{mean}\NormalTok{(TEMP,}\AttributeTok{na.rm=}\NormalTok{T),}
+       \CommentTok{\# sdTEMP = sd(TEMP,na.rm=T),}
+        \AttributeTok{num=} \FunctionTok{na.length}\NormalTok{(TEMP,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{SST =} \FunctionTok{mean}\NormalTok{(SST,}\AttributeTok{na.rm=}\NormalTok{T),}
+       \CommentTok{\# sdSST = sd(SST,na.rm=T),}
+        \AttributeTok{LAT=}\FunctionTok{mean}\NormalTok{(LAT,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{LON =} \FunctionTok{mean}\NormalTok{ (LON,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{MONTH =} \FunctionTok{mean}\NormalTok{(MONTH,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{DAY =} \FunctionTok{mean}\NormalTok{ (DAY,}\AttributeTok{na.rm=}\NormalTok{T))}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{mutate}\NormalTok{(}\AttributeTok{region =}\NormalTok{ regfl)}
+    
+    \ControlFlowTok{if}\NormalTok{(i }\SpecialCharTok{==}\DecValTok{1}\NormalTok{)}
+\NormalTok{      TEMP }\OtherTok{\textless{}{-}}\NormalTok{ tmp}
+    \ControlFlowTok{else}
+\NormalTok{      TEMP }\OtherTok{\textless{}{-}} \FunctionTok{rbind}\NormalTok{(TEMP,tmp)}
+    \FunctionTok{rm}\NormalTok{(tmp)}
+\NormalTok{\}}
+\NormalTok{  \}}
+\NormalTok{  TEMP\_station }\OtherTok{\textless{}{-}}\NormalTok{ TEMP}
+\NormalTok{  TEMP\_yk }\OtherTok{\textless{}{-}}\NormalTok{ TEMP}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{group\_by}\NormalTok{(YEAR,STRATUM,region)}\SpecialCharTok{\%\textgreater{}\%}
+      \FunctionTok{summarize}\NormalTok{(}
+        \AttributeTok{mnTEMP=}\FunctionTok{mean}\NormalTok{(TEMP,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{sdTEMP =} \FunctionTok{sd}\NormalTok{(TEMP,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{num=} \FunctionTok{na.length}\NormalTok{(TEMP,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{mnSST =} \FunctionTok{mean}\NormalTok{(SST,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{sdSST =} \FunctionTok{sd}\NormalTok{(SST,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{LAT=}\FunctionTok{mean}\NormalTok{(LAT,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{LON =} \FunctionTok{mean}\NormalTok{ (LON,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{MONTH =} \FunctionTok{mean}\NormalTok{(MONTH,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{DAY =} \FunctionTok{mean}\NormalTok{ (DAY,}\AttributeTok{na.rm=}\NormalTok{T))}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{ungroup}\NormalTok{()}
+  
+  \CommentTok{\# Now just for EBS and GOA}
+  
+  \CommentTok{\# {-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}}
+\NormalTok{        STRATA\_AREAUSE }\OtherTok{\textless{}{-}}\NormalTok{ STRATA\_AREA}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{filter}\NormalTok{(REGION}\SpecialCharTok{==}\StringTok{"BS"}\NormalTok{)}
+\NormalTok{        STRATA\_AREAUSE }\OtherTok{\textless{}{-}}\NormalTok{ STRATA\_AREAUSE}\SpecialCharTok{\%\textgreater{}\%}
+          \FunctionTok{filter}\NormalTok{(YEAR}\SpecialCharTok{==}\DecValTok{2022}\NormalTok{)}\SpecialCharTok{\%\textgreater{}\%}
+          \FunctionTok{group\_by}\NormalTok{(REGION,STRATUM)}\SpecialCharTok{\%\textgreater{}\%}
+          \FunctionTok{summarize}\NormalTok{(}\AttributeTok{AREA =} \FunctionTok{mean}\NormalTok{(AREA, }\AttributeTok{na.rm=}\NormalTok{T))}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{ungroup}\NormalTok{()}
+  
+\NormalTok{  sub}\OtherTok{\textless{}{-}}\NormalTok{ TEMP\_yk}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{group\_by}\NormalTok{(YEAR,STRATUM,region)}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{filter}\NormalTok{(region }\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(}\StringTok{"nebs"}\NormalTok{,}\StringTok{"sebs"}\NormalTok{))}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{mutate}\NormalTok{(}\AttributeTok{REGION =} \StringTok{"BS"}\NormalTok{)}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{left\_join}\NormalTok{(STRATA\_AREAUSE)}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{ungroup}\NormalTok{()}
+  
+\NormalTok{  sub}\OtherTok{\textless{}{-}}\NormalTok{ sub}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{left\_join}\NormalTok{(}
+\NormalTok{      sub}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{group\_by}\NormalTok{(YEAR,STRATUM,REGION)}\SpecialCharTok{\%\textgreater{}\%}
+        \FunctionTok{summarize}\NormalTok{(}\AttributeTok{AREA =} \FunctionTok{unique}\NormalTok{(AREA))}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{ungroup}\NormalTok{()}\SpecialCharTok{\%\textgreater{}\%}
+        \FunctionTok{group\_by}\NormalTok{(YEAR,REGION)}\SpecialCharTok{\%\textgreater{}\%}
+        \FunctionTok{summarize}\NormalTok{(}\AttributeTok{sumAREA=}\FunctionTok{sum}\NormalTok{(AREA,}\AttributeTok{na.rm=}\NormalTok{T)))}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{mutate}\NormalTok{(}\AttributeTok{propA =}\NormalTok{ AREA}\SpecialCharTok{/}\NormalTok{sumAREA)}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{ungroup}\NormalTok{()}
+    
+  
+\NormalTok{  sub}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{group\_by}\NormalTok{(YEAR,REGION)}\SpecialCharTok{\%\textgreater{}\%}
+        \FunctionTok{summarize}\NormalTok{(}\FunctionTok{sum}\NormalTok{(propA,}\AttributeTok{na.rm=}\NormalTok{T))}
+  
+  
+\NormalTok{  SEBS\_NEBS\_TEMP\_y }\OtherTok{\textless{}{-}}\NormalTok{ sub}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{group\_by}\NormalTok{(YEAR,REGION)}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{summarize}\NormalTok{(}
+        \AttributeTok{mnTEMP =} \FunctionTok{sum}\NormalTok{(mnTEMP}\SpecialCharTok{*}\NormalTok{propA,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{sdTEMP =} \FunctionTok{sum}\NormalTok{(sdTEMP}\SpecialCharTok{*}\NormalTok{propA,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{mnSST  =} \FunctionTok{sum}\NormalTok{(mnSST}\SpecialCharTok{*}\NormalTok{propA,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{sdSST  =} \FunctionTok{sum}\NormalTok{(sdSST}\SpecialCharTok{*}\NormalTok{propA,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{num    =} \FunctionTok{sum}\NormalTok{(num,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{MONTH  =} \FunctionTok{sum}\NormalTok{(MONTH}\SpecialCharTok{*}\NormalTok{propA,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{DAY    =} \FunctionTok{sum}\NormalTok{ (DAY}\SpecialCharTok{*}\NormalTok{propA,}\AttributeTok{na.rm=}\NormalTok{T))}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{ungroup}\NormalTok{()}
+  
+  \CommentTok{\# now just the NEBS:}
+\NormalTok{  sub}\OtherTok{\textless{}{-}}\NormalTok{ TEMP\_yk}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{group\_by}\NormalTok{(YEAR,STRATUM,region)}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{filter}\NormalTok{(region }\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(}\StringTok{"nebs"}\NormalTok{))}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{mutate}\NormalTok{(}\AttributeTok{REGION =} \StringTok{"BS"}\NormalTok{)}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{left\_join}\NormalTok{(STRATA\_AREAUSE)}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{ungroup}\NormalTok{()}
+  
+\NormalTok{  sub}\OtherTok{\textless{}{-}}\NormalTok{ sub}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{left\_join}\NormalTok{(}
+\NormalTok{      sub}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{group\_by}\NormalTok{(YEAR,STRATUM,REGION)}\SpecialCharTok{\%\textgreater{}\%}
+        \FunctionTok{summarize}\NormalTok{(}\AttributeTok{AREA =} \FunctionTok{unique}\NormalTok{(AREA))}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{ungroup}\NormalTok{()}\SpecialCharTok{\%\textgreater{}\%}
+        \FunctionTok{group\_by}\NormalTok{(YEAR,REGION)}\SpecialCharTok{\%\textgreater{}\%}
+        \FunctionTok{summarize}\NormalTok{(}\AttributeTok{sumAREA=}\FunctionTok{sum}\NormalTok{(AREA,}\AttributeTok{na.rm=}\NormalTok{T)))}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{mutate}\NormalTok{(}\AttributeTok{propA =}\NormalTok{ AREA}\SpecialCharTok{/}\NormalTok{sumAREA)}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{ungroup}\NormalTok{()}
+  
+\NormalTok{  sub}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{group\_by}\NormalTok{(YEAR,REGION)}\SpecialCharTok{\%\textgreater{}\%}
+        \FunctionTok{summarize}\NormalTok{(}\FunctionTok{sum}\NormalTok{(propA,}\AttributeTok{na.rm=}\NormalTok{T))}
+  
+  
+\NormalTok{  NEBS\_TEMP\_y }\OtherTok{\textless{}{-}}\NormalTok{ sub}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{group\_by}\NormalTok{(YEAR,REGION)}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{summarize}\NormalTok{(}
+        \AttributeTok{mnTEMP =} \FunctionTok{sum}\NormalTok{(mnTEMP}\SpecialCharTok{*}\NormalTok{propA,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{sdTEMP =} \FunctionTok{sum}\NormalTok{(sdTEMP}\SpecialCharTok{*}\NormalTok{propA,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{mnSST  =} \FunctionTok{sum}\NormalTok{(mnSST}\SpecialCharTok{*}\NormalTok{propA,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{sdSST  =} \FunctionTok{sum}\NormalTok{(sdSST}\SpecialCharTok{*}\NormalTok{propA,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{num    =} \FunctionTok{sum}\NormalTok{(num,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{MONTH  =} \FunctionTok{sum}\NormalTok{(MONTH}\SpecialCharTok{*}\NormalTok{propA,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{DAY    =} \FunctionTok{sum}\NormalTok{ (DAY}\SpecialCharTok{*}\NormalTok{propA,}\AttributeTok{na.rm=}\NormalTok{T))}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{ungroup}\NormalTok{()}
+  
+   \CommentTok{\# now just the NEBS:}
+\NormalTok{  sub}\OtherTok{\textless{}{-}}\NormalTok{ TEMP\_yk}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{group\_by}\NormalTok{(YEAR,STRATUM,region)}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{filter}\NormalTok{(region }\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(}\StringTok{"sebs"}\NormalTok{))}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{mutate}\NormalTok{(}\AttributeTok{REGION =} \StringTok{"BS"}\NormalTok{)}\SpecialCharTok{\%\textgreater{}\%}
+   \FunctionTok{left\_join}\NormalTok{(STRATA\_AREAUSE)}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{ungroup}\NormalTok{()}
+  
+\NormalTok{  sub}\OtherTok{\textless{}{-}}\NormalTok{ sub}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{left\_join}\NormalTok{(}
+\NormalTok{      sub}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{group\_by}\NormalTok{(YEAR,STRATUM,REGION)}\SpecialCharTok{\%\textgreater{}\%}
+        \FunctionTok{summarize}\NormalTok{(}\AttributeTok{AREA =} \FunctionTok{unique}\NormalTok{(AREA))}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{ungroup}\NormalTok{()}\SpecialCharTok{\%\textgreater{}\%}
+        \FunctionTok{group\_by}\NormalTok{(YEAR,REGION)}\SpecialCharTok{\%\textgreater{}\%}
+        \FunctionTok{summarize}\NormalTok{(}\AttributeTok{sumAREA=}\FunctionTok{sum}\NormalTok{(AREA,}\AttributeTok{na.rm=}\NormalTok{T)))}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{mutate}\NormalTok{(}\AttributeTok{propA =}\NormalTok{ AREA}\SpecialCharTok{/}\NormalTok{sumAREA)}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{ungroup}\NormalTok{()}
+    
+  
+\NormalTok{  sub}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{group\_by}\NormalTok{(YEAR,REGION)}\SpecialCharTok{\%\textgreater{}\%}
+        \FunctionTok{summarize}\NormalTok{(}\FunctionTok{sum}\NormalTok{(propA,}\AttributeTok{na.rm=}\NormalTok{T))}
+  
+  
+\NormalTok{  SEBS\_TEMP\_y }\OtherTok{\textless{}{-}}\NormalTok{ sub}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{group\_by}\NormalTok{(YEAR,REGION)}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{summarize}\NormalTok{(}
+        \AttributeTok{mnTEMP =} \FunctionTok{sum}\NormalTok{(mnTEMP}\SpecialCharTok{*}\NormalTok{propA,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{sdTEMP =} \FunctionTok{sum}\NormalTok{(sdTEMP}\SpecialCharTok{*}\NormalTok{propA,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{mnSST  =} \FunctionTok{sum}\NormalTok{(mnSST}\SpecialCharTok{*}\NormalTok{propA,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{sdSST  =} \FunctionTok{sum}\NormalTok{(sdSST}\SpecialCharTok{*}\NormalTok{propA,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{num    =} \FunctionTok{sum}\NormalTok{(num,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{MONTH  =} \FunctionTok{sum}\NormalTok{(MONTH}\SpecialCharTok{*}\NormalTok{propA,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{DAY    =} \FunctionTok{sum}\NormalTok{ (DAY}\SpecialCharTok{*}\NormalTok{propA,}\AttributeTok{na.rm=}\NormalTok{T))}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{ungroup}\NormalTok{()}
+  
+  
+  \CommentTok{\# now for GOA}
+  
+\NormalTok{  STRATA\_AREAUSE }\OtherTok{\textless{}{-}}\NormalTok{ STRATA\_AREA}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{filter}\NormalTok{(REGION}\SpecialCharTok{==}\StringTok{"GOA"}\NormalTok{)}
+\NormalTok{       STRATA\_AREAUSE }\OtherTok{\textless{}{-}}\NormalTok{ STRATA\_AREAUSE}\SpecialCharTok{\%\textgreater{}\%}
+          \FunctionTok{filter}\NormalTok{(YEAR}\SpecialCharTok{==}\DecValTok{1993}\NormalTok{)}\SpecialCharTok{\%\textgreater{}\%}
+          \FunctionTok{group\_by}\NormalTok{(REGION,STRATUM)}\SpecialCharTok{\%\textgreater{}\%}
+          \FunctionTok{summarize}\NormalTok{(}\AttributeTok{AREA =} \FunctionTok{mean}\NormalTok{(AREA, }\AttributeTok{na.rm=}\NormalTok{T))}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{ungroup}\NormalTok{()}
+        
+\NormalTok{  sub}\OtherTok{\textless{}{-}}\NormalTok{ TEMP\_yk}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{group\_by}\NormalTok{(YEAR,STRATUM,region)}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{filter}\NormalTok{(region }\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(}\StringTok{"goa"}\NormalTok{))}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{mutate}\NormalTok{(}\AttributeTok{REGION =} \StringTok{"GOA"}\NormalTok{)}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{left\_join}\NormalTok{(STRATA\_AREAUSE)}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{ungroup}\NormalTok{()}
+  
+\NormalTok{  sub}\OtherTok{\textless{}{-}}\NormalTok{ sub}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{left\_join}\NormalTok{(}
+\NormalTok{      sub}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{group\_by}\NormalTok{(YEAR,STRATUM,REGION)}\SpecialCharTok{\%\textgreater{}\%}
+        \FunctionTok{summarize}\NormalTok{(}\AttributeTok{AREA =} \FunctionTok{unique}\NormalTok{(AREA))}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{ungroup}\NormalTok{()}\SpecialCharTok{\%\textgreater{}\%}
+        \FunctionTok{group\_by}\NormalTok{(YEAR,REGION)}\SpecialCharTok{\%\textgreater{}\%}
+        \FunctionTok{summarize}\NormalTok{(}\AttributeTok{sumAREA=}\FunctionTok{sum}\NormalTok{(AREA,}\AttributeTok{na.rm=}\NormalTok{T)))}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{mutate}\NormalTok{(}\AttributeTok{propA =}\NormalTok{ AREA}\SpecialCharTok{/}\NormalTok{sumAREA)}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{ungroup}\NormalTok{()}
+    
+  
+\NormalTok{  sub}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{group\_by}\NormalTok{(YEAR,REGION)}\SpecialCharTok{\%\textgreater{}\%}
+        \FunctionTok{summarize}\NormalTok{(}\FunctionTok{sum}\NormalTok{(propA,}\AttributeTok{na.rm=}\NormalTok{T))}
+  
+  
+\NormalTok{  GOA\_TEMP\_y }\OtherTok{\textless{}{-}}\NormalTok{ sub}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{group\_by}\NormalTok{(YEAR,REGION)}\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{summarize}\NormalTok{(}
+        \AttributeTok{mnTEMP =} \FunctionTok{sum}\NormalTok{(mnTEMP}\SpecialCharTok{*}\NormalTok{propA,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{sdTEMP =} \FunctionTok{sum}\NormalTok{(sdTEMP}\SpecialCharTok{*}\NormalTok{propA,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{mnSST  =} \FunctionTok{sum}\NormalTok{(mnSST}\SpecialCharTok{*}\NormalTok{propA,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{sdSST  =} \FunctionTok{sum}\NormalTok{(sdSST}\SpecialCharTok{*}\NormalTok{propA,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{num    =} \FunctionTok{sum}\NormalTok{(num,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{MONTH  =} \FunctionTok{sum}\NormalTok{(MONTH}\SpecialCharTok{*}\NormalTok{propA,}\AttributeTok{na.rm=}\NormalTok{T),}
+        \AttributeTok{DAY    =} \FunctionTok{sum}\NormalTok{ (DAY}\SpecialCharTok{*}\NormalTok{propA,}\AttributeTok{na.rm=}\NormalTok{T))}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{ungroup}\NormalTok{()}
+  
+  
+  \ControlFlowTok{if}\NormalTok{(}\SpecialCharTok{!}\FunctionTok{dir.exists}\NormalTok{(}\FunctionTok{file.path}\NormalTok{(data.out,}\StringTok{"Temp"}\NormalTok{)))}
+    \FunctionTok{dir.create}\NormalTok{(}\FunctionTok{file.path}\NormalTok{(data.out,}\StringTok{"Temp"}\NormalTok{))}
+  \FunctionTok{save}\NormalTok{(GOA\_TEMP\_y,}\AttributeTok{file =} \FunctionTok{file.path}\NormalTok{(data.out,}\StringTok{"Temp/GOA\_TEMP\_y.Rdata"}\NormalTok{))}
+  \FunctionTok{save}\NormalTok{(SEBS\_TEMP\_y,}\AttributeTok{file =} \FunctionTok{file.path}\NormalTok{(data.out,}\StringTok{"Temp/SEBS\_TEMP\_y.Rdata"}\NormalTok{))}
+  \FunctionTok{save}\NormalTok{(NEBS\_TEMP\_y,}\AttributeTok{file =} \FunctionTok{file.path}\NormalTok{(data.out,}\StringTok{"Temp/NEBS\_TEMP\_y.Rdata"}\NormalTok{))}
+  \FunctionTok{save}\NormalTok{(SEBS\_NEBS\_TEMP\_y,}\AttributeTok{file =} \FunctionTok{file.path}\NormalTok{(data.out,}\StringTok{"Temp/SEBS\_NEBS\_TEMP\_y.Rdata"}\NormalTok{))}
+  \FunctionTok{save}\NormalTok{(TEMP\_station,}\AttributeTok{file =} \FunctionTok{file.path}\NormalTok{(data.out,}\StringTok{"Temp/TEMP\_station.Rdata"}\NormalTok{))}
+  \FunctionTok{save}\NormalTok{(TEMP\_yk,}\AttributeTok{file =} \FunctionTok{file.path}\NormalTok{(data.out,}\StringTok{"Temp/TEMP\_yk.Rdata"}\NormalTok{))}
+  
+  
+\CommentTok{\#}
 \CommentTok{\# \textasciigrave{}\textasciigrave{}\textasciigrave{}}
 \CommentTok{\# }
 \CommentTok{\# *The cpue files are now saved in the directory \textasciigrave{}r file.path(data.out,"../")\textasciigrave{}*}

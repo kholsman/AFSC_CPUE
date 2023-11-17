@@ -11,11 +11,18 @@
   }else{
     con <-  odbcConnect("AFSC",username,password,believeNRows=FALSE)
   }
+# 
+#  tt2 <- sqlTables(channel = con, schema = "FOODLAB")
+#  tt  <- sqlFetch(channel = con, schema = "RACEBASE",sqtable = "HAUL", max = 2, rows_at_time = 1)
+#  tt  <- sqlTables(channel = con, schema = "RACEBASE")
+#  tt  <- sqlFetch(channel = con, schema = "foodlab",sqtable = "HAUL", max = 2, rows_at_time = 1)
+#  
+
   cat("\n-- Get LWA_ALL\n")
   LWA_ALL     <- sqlQuery(con,qry_LWA_all)
   LW_ALL      <- sqlQuery(con,qry_LW_all)
-  LWA_srvy    <- LWA_ALL%>%filter(CRUISE%in%sub_surveys$CRUISE)
-  LW_srvy     <- LW_ALL%>%filter(CRUISE%in%sub_surveys$CRUISE)
+  LWA_srvy    <- LWA_ALL%>%filter(CRUISE_TYPE =="Race_Groundfish")
+  LW_srvy     <- LW_ALL%>%filter(CRUISE_TYPE =="Race_Groundfish")
   save(LWA_ALL,  file=file.path(data.path,"LWA_ALL.Rdata"))
   save(LWA_srvy, file=file.path(data.path,"LWA_srvy_noObs.Rdata"))
   save(LW_ALL,  file=file.path(data.path,"LW_ALL.Rdata"))

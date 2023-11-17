@@ -1,11 +1,11 @@
 ##################################################
 # Rcode to query RACE database
 # Kirstin.holsman@noaa.gov
+# updated 2023
 ##################################################
 
 
 # ************************
-# REMEMBER : MUST RUN IN R 32 bit
 # ************************
 
 require(RODBC)
@@ -58,7 +58,7 @@ cat("--> connected to AFSC Database <--\n")
   tables   <- sqlTables(con,schema="FOODLAB")$TABLE_NAME
   # tables2   <- sqlTables(con,schema=RACE_schema)$TABLE_NAME
  
-  cat(" -- Create data tables\n")
+  cat("   -- Create data tables\n")
  
   # Create data tables (not saved to Oracle for now)
   #---------------------------------------------------
@@ -74,10 +74,10 @@ cat("--> connected to AFSC Database <--\n")
       if(!dir.exists(sp_dir)) dir.create(sp_dir)
       
       out_nm         <- paste0(".",splk$sp[1],".",srvys$reg[r])
-      location       <- data.frame(sqlQuery(con,location_sql(surveyIN = srvys[r,2] )))
-      location_catch <- data.frame(sqlQuery(con,location_catch_sql(surveyIN = srvys[r,2],
+      location       <- data.frame(sqlQuery(con,location_sql(surveyIN = srvys$num[r] )))
+      location_catch <- data.frame(sqlQuery(con,location_catch_sql(surveyIN = srvys$num[r],
                                                                speciesIN = splk$SPECIES_CODE)))
-      length         <- data.frame(sqlQuery(con,length_sql(surveyIN = srvys[r,2],
+      length         <- data.frame(sqlQuery(con,length_sql(surveyIN = srvys$num[r],
                                                            speciesIN = splk$SPECIES_CODE )))
       save(location,       file=file.path(sp_dir,"location.Rdata"))
       save(location_catch, file=file.path(sp_dir,"location_catch.Rdata"))

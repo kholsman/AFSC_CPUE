@@ -231,113 +231,60 @@
 		HH.CRUISE_TYPE,TT.ECOPATH_PP,PP.PREDJOIN, PP.PRED_LEN,pp.PREY_SZ1,pp.PREY_SZ2,pp.PREY_SZ3,pp.EMPTY_1,pp.PREY_SEX,pp.PREYLENJOIN;"
 
 	#______________________________________________________
-
-
 	qry_LWA_all<-
-	  "SELECT SS.CRUISE, SS.REGION, HH.START_LATITUDE, 
+	  "SELECT SS.CRUISE, SS.REGION, HH.START_LATITUDE, FLH.CRUISE_TYPE, FLH.HAULJOIN,HH.STATIONID ,
 		HH.START_LONGITUDE, HH.STRATUM,TT.ECOPATH_PP,hh.start_time,
 		hh.gear_temperature, hh.surface_temperature, 
 		SS.SPECIES_CODE, NPRED.ECOPATH_Pred, NPRED.GOAPOLL_Pred, SS.SEX, SS.AGE, SS.LENGTH, SS.WEIGHT
 
-		FROM racebase.specimen SS, racebase.haul HH, foodlab.nodc NPRED,kerim_strata TT
+		FROM racebase.specimen SS, racebase.haul HH, foodlab.haul FLH, foodlab.nodc NPRED,kerim_strata TT
 
-		WHERE SS.hauljoin = HH.hauljoin AND SS.SPECIES_CODE = NPRED.race
+		WHERE SS.hauljoin = HH.hauljoin 
+		AND SS.SPECIES_CODE = NPRED.race 
+		AND (FLH.VESSEL = HH.VESSEL AND FLH.CRUISE = HH.CRUISE AND FLH.HAUL = HH.HAUL) 
 		AND (HH.STRATUM = TT.STRATUM AND HH.REGION =TT.REGION) 
 		--AND(hh.CRUISE_TYPE = 'Race_Groundfish')
-
-		AND SS.AGE IS NOT NULL
+    AND SS.AGE IS NOT NULL
 		AND (NPRED.ECOPATH_Pred <>  'NA' )
 		    
 		ORDER BY NPRED.GOAPOLL_Pred, SS.SEX;"
 	
-	# AND (NPRED.ECOPATH_Pred='YELLOWFIN SOLE'
-	# 	or NPRED.ECOPATH_Pred='WALLEYE POLLOCK'
-	# 	or NPRED.ECOPATH_Pred='PACIFIC COD'
-	# 	or NPRED.ECOPATH_Pred='FLATHEAD SOLE'
-	# 	or NPRED.ECOPATH_Pred='ARROWTOOTH FLOUNDR'
-	# 	or NPRED.ECOPATH_Pred='ROCK SOLE'
-	# 	or NPRED.ECOPATH_Pred='Lg Sculpin'
-	# 	or NPRED.ECOPATH_Pred='Salmon'
-	# 	or NPRED.ECOPATH_Pred='PACIFIC HALIBUT'
-	# 	or NPRED.ECOPATH_Pred='Misc. Flatfish'
-	# 	or NPRED.ECOPATH_Pred='AK Plaice'
-	# 	or NPRED.ECOPATH_Pred='Prickle squish round'
-	# 	or NPRED.ECOPATH_Pred='Greenlings'
-	# 	or NPRED.ECOPATH_Pred='Eelpout'
-	# 	or NPRED.ECOPATH_Pred='GREENLAND TURBOT'
-	# 	or NPRED.ECOPATH_Pred='Herring'
-	# 	or NPRED.ECOPATH_Pred='BIG SKATE'
-	# 	or NPRED.ECOPATH_Pred='Rex sole'
-	# 	or NPRED.ECOPATH_Pred='ATKA MACKEREL'
-	# 	or NPRED.ECOPATH_Pred='Macrouridae'
-	# 	or NPRED.ECOPATH_Pred='Sculpin'
-	# 	or NPRED.ECOPATH_Pred='AK SKATE'
-	# 	or NPRED.ECOPATH_Pred='Eulachon'
-	# 	or NPRED.ECOPATH_Pred='Unid Rajidae'
-	# 	or NPRED.ECOPATH_Pred='SABLEFISH'
-	# 	or NPRED.ECOPATH_Pred='POP'
-	# 	or NPRED.ECOPATH_Pred='Aleutian Skate'
-	# 	or NPRED.ECOPATH_Pred='Managed Forage'
-	# 	or NPRED.ECOPATH_Pred='Northern Rock'
-	# 	or NPRED.ECOPATH_Pred='Unid Bathyraja'
-	# 	or NPRED.ECOPATH_Pred='Bering Skate'
-	# 	or NPRED.ECOPATH_Pred='Bathylagidae'
-	# 	or NPRED.ECOPATH_Pred='Capelin'
-	# 	or NPRED.ECOPATH_Pred='Rougheye Rock'
-	# 	or NPRED.ECOPATH_Pred='Dover Sole'
-	# 	or NPRED.ECOPATH_Pred='Shortraker Rock'
-	# 	or NPRED.ECOPATH_Pred='Dusky Rock'
-	# 	or NPRED.ECOPATH_Pred='Giant Grenadier'
-	# 	or NPRED.ECOPATH_Pred='Shortsp Thorny'
-	# 	or NPRED.ECOPATH_Pred='Sharpchin Rock'
-	# 	or NPRED.ECOPATH_Pred='Sleeper Shark'
-	# 	or NPRED.ECOPATH_Pred='Sebastes'
-	# 	or NPRED.ECOPATH_Pred='Black Skate'
-	# 	or NPRED.ECOPATH_Pred='Mud Skate'
-	# 	or NPRED.ECOPATH_Pred='Myctophidae'
-	# 	or NPRED.ECOPATH_Pred='WhtBlotch Skate'
-	# 	or NPRED.ECOPATH_Pred='Pacific Grenadier'
-	# 	or NPRED.ECOPATH_Pred='Lingcod'
-	# 	or NPRED.ECOPATH_Pred='Dogfish'
-	# 	or NPRED.ECOPATH_Pred='Hake'
-	# 	or NPRED.ECOPATH_Pred='Squid'
-	# 	or NPRED.ECOPATH_Pred='Commander Skate'
-	# 	or NPRED.ECOPATH_Pred='Oth pel. smelt'
-	# 	or NPRED.ECOPATH_Pred='Sandlance'
-	# 	or NPRED.ECOPATH_Pred='Prickle squish deep'
-	# 	or NPRED.ECOPATH_Pred='Gen. Flatfish'
-	# 	or NPRED.ECOPATH_Pred='Deepsea Skate'
-	# 	or NPRED.ECOPATH_Pred='Canary Rock')
-	# AND (NPRED.GOAPOLL_pred='ARROWTOOTH FLOUNDR'
-	# 	or NPRED.GOAPOLL_pred='WALLEYE POLLOCK'
-	# 	or NPRED.GOAPOLL_pred='PACIFIC COD'
-	# 	or NPRED.GOAPOLL_pred='YELLOWFIN SOLE'
-	# 	or NPRED.GOAPOLL_pred='PACIFIC HALIBUT'
-	# 	or NPRED.GOAPOLL_pred='FLATHEAD SOLE'
-	# 	or NPRED.GOAPOLL_pred='ROCK SOLE'
-	# 	or NPRED.GOAPOLL_pred='GREENLAND TURBOT'
-	# 	or NPRED.GOAPOLL_pred='BIG SKATE'
-	# 	or NPRED.GOAPOLL_pred='ATKA MACKEREL'
-	# 	or NPRED.GOAPOLL_pred='AK SKATE'
-	# 	or NPRED.GOAPOLL_pred='SABLEFISH'
-	# 	or NPRED.GOAPOLL_pred='Aleutian Skate'
-	# 	or NPRED.GOAPOLL_pred='Bering Skate'
-	# 	or NPRED.GOAPOLL_pred='Black Skate'
-	# 	or NPRED.GOAPOLL_pred='Mud Skate'
-	# 	or NPRED.GOAPOLL_pred='WhtBlotch Skate'
-	# 	or NPRED.GOAPOLL_pred='Commander Skate'
-	# 	or NPRED.GOAPOLL_pred='Deepsea Skate')
+	qry_LWA_all<-
+	  "SELECT SS.CRUISE, SS.REGION, HH.START_LATITUDE, FLH.CRUISE_TYPE, FLH.HAULJOIN,HH.STATIONID ,
+		HH.START_LONGITUDE, HH.STRATUM,TT.ECOPATH_PP,hh.start_time,
+		hh.gear_temperature, hh.surface_temperature, 
+			SP.SPECIES_NAME, SP.COMMON_NAME,NPRED.ECOPATH_PRED, NPRED.GOAPOLL_PRED, NPRED.GOAPOLL_PREY,
+		SS.SPECIES_CODE, NPRED.ECOPATH_Pred, SS.SEX, SS.AGE, SS.LENGTH, SS.WEIGHT
+
+		FROM racebase.specimen SS, racebase.haul HH, RACEBASE.SPECIES SP, foodlab.haul FLH, foodlab.nodc NPRED,kerim_strata TT
+
+		WHERE SS.hauljoin = HH.hauljoin 
+		AND SS.SPECIES_CODE = NPRED.race 
+		AND NPRED.RACE  = SP.SPECIES_CODE
+		AND (FLH.VESSEL = HH.VESSEL AND FLH.CRUISE = HH.CRUISE AND FLH.HAUL = HH.HAUL) 
+		AND (HH.STRATUM = TT.STRATUM AND HH.REGION =TT.REGION) 
+		--AND(hh.CRUISE_TYPE = 'Race_Groundfish')
+    AND SS.AGE IS NOT NULL
+		AND (NPRED.ECOPATH_Pred <>  'NA' )
+		    
+		ORDER BY NPRED.GOAPOLL_Pred, SS.SEX;"
+	
+
+	
 	#---------------------------------------------------------------
-	
 	qry_LW_all<-
-	  "SELECT SS.CRUISE, SS.REGION, HH.START_LATITUDE, 
+	  "SELECT SS.CRUISE, SS.REGION, HH.START_LATITUDE, FLH.CRUISE_TYPE, FLH.HAULJOIN,HH.STATIONID ,
 		HH.START_LONGITUDE, HH.STRATUM,TT.ECOPATH_PP,hh.start_time,
 		hh.gear_temperature, hh.surface_temperature, 
-		SS.SPECIES_CODE, NPRED.ECOPATH_Pred, NPRED.GOAPOLL_Pred, SS.SEX, SS.AGE, SS.LENGTH, SS.WEIGHT
+		SP.SPECIES_NAME, SP.COMMON_NAME,NPRED.ECOPATH_PRED, NPRED.GOAPOLL_PRED, NPRED.GOAPOLL_PREY,
+		SS.SPECIES_CODE, NPRED.ECOPATH_Pred, SS.SEX, SS.AGE, SS.LENGTH, SS.WEIGHT
 
-		FROM racebase.specimen SS, racebase.haul HH, foodlab.nodc NPRED,kerim_strata TT
+		FROM racebase.specimen SS, racebase.haul HH,RACEBASE.SPECIES SP, foodlab.haul FLH, foodlab.nodc NPRED,kerim_strata TT
 
-		WHERE SS.hauljoin = HH.hauljoin AND SS.SPECIES_CODE = NPRED.race
+		WHERE SS.hauljoin = HH.hauljoin 
+		AND SS.SPECIES_CODE = NPRED.race 
+		AND NPRED.RACE=SP.SPECIES_CODE
+		AND (FLH.VESSEL = HH.VESSEL AND FLH.CRUISE = HH.CRUISE AND FLH.HAUL = HH.HAUL) 
 		AND (HH.STRATUM = TT.STRATUM AND HH.REGION =TT.REGION) 
 		--AND(hh.CRUISE_TYPE = 'Race_Groundfish')
 
@@ -345,83 +292,7 @@
 		    
 		ORDER BY NPRED.GOAPOLL_Pred, SS.SEX;"
 	
-	# AND (NPRED.ECOPATH_Pred='YELLOWFIN SOLE'
-	# 	or NPRED.ECOPATH_Pred='WALLEYE POLLOCK'
-	# 	or NPRED.ECOPATH_Pred='PACIFIC COD'
-	# 	or NPRED.ECOPATH_Pred='FLATHEAD SOLE'
-	# 	or NPRED.ECOPATH_Pred='ARROWTOOTH FLOUNDR'
-	# 	or NPRED.ECOPATH_Pred='ROCK SOLE'
-	# 	or NPRED.ECOPATH_Pred='Lg Sculpin'
-	# 	or NPRED.ECOPATH_Pred='Salmon'
-	# 	or NPRED.ECOPATH_Pred='PACIFIC HALIBUT'
-	# 	or NPRED.ECOPATH_Pred='Misc. Flatfish'
-	# 	or NPRED.ECOPATH_Pred='AK Plaice'
-	# 	or NPRED.ECOPATH_Pred='Prickle squish round'
-	# 	or NPRED.ECOPATH_Pred='Greenlings'
-	# 	or NPRED.ECOPATH_Pred='Eelpout'
-	# 	or NPRED.ECOPATH_Pred='GREENLAND TURBOT'
-	# 	or NPRED.ECOPATH_Pred='Herring'
-	# 	or NPRED.ECOPATH_Pred='BIG SKATE'
-	# 	or NPRED.ECOPATH_Pred='Rex sole'
-	# 	or NPRED.ECOPATH_Pred='ATKA MACKEREL'
-	# 	or NPRED.ECOPATH_Pred='Macrouridae'
-	# 	or NPRED.ECOPATH_Pred='Sculpin'
-	# 	or NPRED.ECOPATH_Pred='AK SKATE'
-	# 	or NPRED.ECOPATH_Pred='Eulachon'
-	# 	or NPRED.ECOPATH_Pred='Unid Rajidae'
-	# 	or NPRED.ECOPATH_Pred='SABLEFISH'
-	# 	or NPRED.ECOPATH_Pred='POP'
-	# 	or NPRED.ECOPATH_Pred='Aleutian Skate'
-	# 	or NPRED.ECOPATH_Pred='Managed Forage'
-	# 	or NPRED.ECOPATH_Pred='Northern Rock'
-	# 	or NPRED.ECOPATH_Pred='Unid Bathyraja'
-	# 	or NPRED.ECOPATH_Pred='Bering Skate'
-	# 	or NPRED.ECOPATH_Pred='Bathylagidae'
-	# 	or NPRED.ECOPATH_Pred='Capelin'
-	# 	or NPRED.ECOPATH_Pred='Rougheye Rock'
-	# 	or NPRED.ECOPATH_Pred='Dover Sole'
-	# 	or NPRED.ECOPATH_Pred='Shortraker Rock'
-	# 	or NPRED.ECOPATH_Pred='Dusky Rock'
-	# 	or NPRED.ECOPATH_Pred='Giant Grenadier'
-	# 	or NPRED.ECOPATH_Pred='Shortsp Thorny'
-	# 	or NPRED.ECOPATH_Pred='Sharpchin Rock'
-	# 	or NPRED.ECOPATH_Pred='Sleeper Shark'
-	# 	or NPRED.ECOPATH_Pred='Sebastes'
-	# 	or NPRED.ECOPATH_Pred='Black Skate'
-	# 	or NPRED.ECOPATH_Pred='Mud Skate'
-	# 	or NPRED.ECOPATH_Pred='Myctophidae'
-	# 	or NPRED.ECOPATH_Pred='WhtBlotch Skate'
-	# 	or NPRED.ECOPATH_Pred='Pacific Grenadier'
-	# 	or NPRED.ECOPATH_Pred='Lingcod'
-	# 	or NPRED.ECOPATH_Pred='Dogfish'
-	# 	or NPRED.ECOPATH_Pred='Hake'
-	# 	or NPRED.ECOPATH_Pred='Squid'
-	# 	or NPRED.ECOPATH_Pred='Commander Skate'
-	# 	or NPRED.ECOPATH_Pred='Oth pel. smelt'
-	# 	or NPRED.ECOPATH_Pred='Sandlance'
-	# 	or NPRED.ECOPATH_Pred='Prickle squish deep'
-	# 	or NPRED.ECOPATH_Pred='Gen. Flatfish'
-	# 	or NPRED.ECOPATH_Pred='Deepsea Skate'
-	# 	or NPRED.ECOPATH_Pred='Canary Rock')
-	# AND (NPRED.GOAPOLL_pred='ARROWTOOTH FLOUNDR'
-	# 	or NPRED.GOAPOLL_pred='WALLEYE POLLOCK'
-	# 	or NPRED.GOAPOLL_pred='PACIFIC COD'
-	# 	or NPRED.GOAPOLL_pred='YELLOWFIN SOLE'
-	# 	or NPRED.GOAPOLL_pred='PACIFIC HALIBUT'
-	# 	or NPRED.GOAPOLL_pred='FLATHEAD SOLE'
-	# 	or NPRED.GOAPOLL_pred='ROCK SOLE'
-	# 	or NPRED.GOAPOLL_pred='GREENLAND TURBOT'
-	# 	or NPRED.GOAPOLL_pred='BIG SKATE'
-	# 	or NPRED.GOAPOLL_pred='ATKA MACKEREL'
-	# 	or NPRED.GOAPOLL_pred='AK SKATE'
-	# 	or NPRED.GOAPOLL_pred='SABLEFISH'
-	# 	or NPRED.GOAPOLL_pred='Aleutian Skate'
-	# 	or NPRED.GOAPOLL_pred='Bering Skate'
-	# 	or NPRED.GOAPOLL_pred='Black Skate'
-	# 	or NPRED.GOAPOLL_pred='Mud Skate'
-	# 	or NPRED.GOAPOLL_pred='WhtBlotch Skate'
-	# 	or NPRED.GOAPOLL_pred='Commander Skate'
-	# 	or NPRED.GOAPOLL_pred='Deepsea Skate')
+	
 	#---------------------------------------------------------------
 	
 	

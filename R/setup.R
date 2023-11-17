@@ -9,14 +9,11 @@
   # Set up SQL stuff:
   #----------------------------------------
   username_path <- "R"   # copy the template from the data/in folder to not_shared
-  qrydate       <-  "2023_03_02"
+  qrydate       <-  "2023_09_26"  #"2023_03_02"
   #walleye pollock, Pacific cod, arrowtooth flounder, sablefish Pacific ,halibut
   
   # Set switches for this code
   #----------------------------------------
-  update_LWdata       <-   # set to 1 to update LW regressions
-  update_lkups        <-   # if updating the lookuptables
-  update_qrydate      <-  FALSE # TRUE # if updating the lookuptables
   if(update_qrydate)
    qrydate <-  format(Sys.time(), "%Y_%m_%d")
   

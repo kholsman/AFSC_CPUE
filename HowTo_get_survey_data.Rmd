@@ -33,7 +33,10 @@ output:
  knitr::opts_chunk$set(echo = TRUE, fig.align="center")
  thisYr <- format(Sys.time(), "%Y")
  today  <- format(Sys.time(), "%b %d, %Y")
-  suppressMessages(source("R/setup.R"))
+    update_qrydate      <-     # update the query date
+    update_LWdata       <-    # update LW regressions
+    update_lkups        <-   FALSE # update the lookuptables
+  suppressMessages(source("R/make.R"))
  
 ```
 
@@ -73,34 +76,37 @@ The data.frames within each cpue_data object are:
 8. **propByStrata**: proportion of biomass in each strata per species per year
 9. **propByStrataBin**: proportion of biomass in each bin and strata per species per year
 
+
 ![EBS strata from Kearney et al. 2021 https://zenodo.org/record/4586950/files/Bering10K_dataset_documentation.pdf](figs/Kearney_2023.jpg)
-These are calculated from the RACEBASE data tables for survey results where total CPUE was recorded for the species $s$ (location_catch) at each haul, expanded to include stations $i$ where CPUE=0 (location) and expanded to each size bin $l$ using the proportional subset of frequency of fish of given length (mm), binned into 10 mm bins ($l$) and predicted weight ($\hat{W}$) for each size bin $l$ at each station $i$:
-
-$$B_{s,y} =  \bar{CPUE_{s,k,y}} \dot{}A_{k}$$
-where $A_{k}$ is the area of the strata $k$ in $Km^2$ and $\bar{CPUE_{s,k,y}}$ is the strata specific average CPUE (kg per $Km^2$ or number per $Km^2$) of all stations $i$ in strata $k$:
-$$\bar{CPUE_{s,k,y}} = \frac{1}{n_k}\dot{}\sum_{n_k}{CPUE_{s,k,y,i}}$$  
-where $CPUE_{s,k,y,i}$ is the station specific CPUE (saved as the object `cpue_data$CPUE_station_yr`).
-
 To obtain population level estimates of the biomass or abundance of fish by size bin $l$, we used a length weight regression to estimate the weight of each size fish $j$ measured ($\hat{W}$) to calculate the proportion by weight or frequency at each station where
-$$\hat{W} = \alpha_s+L_j^{\beta_s} $$
-where $\alpha_s$ and $\beta_s$ are fit (updated each year) to all available length and weight data from surveys from all years across the EBS, GOA, and AI (rather than each basin separately) and
-$$p^w_{l,i} = \frac{N_{l,i}\dot{}\hat{\bar{W_{l,i}}}}{\sum_{}{N_{l,i}\dot{}\hat{\bar{W_{l,i}}}}}$$
-and  
-$$p^N_{l,i} = \frac{N_{l,i}}{\sum_{}{N_{l,i}}}$$
-This was then multiplied by the CPUE at each station ($CPUE_{s,k,y,i}$) to obtain a station estimate of CPUE by size bin $l$:
-$$CPUE_{s,k,y,l,i} = p^N_{l,i}\dot{}CPUE_{s,k,y,i}$$
+$$\hat{W_j} = \alpha_s+L_j^{\beta_s} $$
 
-Finally, the average strata CPUE (${mnCPUE_{s,k,y,l}}$) was calculated as:
-$${mnCPUE_{s,k,y,l}} = \frac{1}{n_k}\dot{}\sum_{n_k}{CPUE_{s,k,y,l,i}}$$
-and strata- and bin-specific biomass (Kg) was calculated the product of mean CPUE (Kg per Km^2) and strata area (Km^2):
-$$B_{s,y,k,l}= {mnCPUE_{s,k,y,l}}\dot{}A_{k}$$
+where the species-specific ($s$) slope and intercept values ($\beta_s$ and $\alpha_s$, respectively) were fit to all available length and weight data from surveys from all years across the EBS, GOA, and AI (rather than each basin separately).
 
-and total annual biomass by bin is the sum of strata-specific biomass for each species:
+The number and biomass ($hat{W_j}$) for each 1 (mm) length was summed into 10 mm size bins $l$ and expanded to include stations and bins where CPUE = 0 (saved as the object `cpue_data$CPUE_station_bin_yr`). Bin-specific catch $\bar{CPUE}_{s,k,y,l}$ (kg per $Km^2$ or number per $Km^2$) of all stations $i$ in strata $k$ for size bin $l$ (saved as the object `cpue_data$mnCPUE_strata_bin_yr`)::
+$$\bar{CPUE}^{B|N}_{s,k,y,l}=\frac{1}{n_k}\sum_{n_k}{CPUE^{B|N}_{s,k,y,l,i}}$$
 
-$$B_{s,y,l}= \sum_{n_k}{B_{s,y,k,l}}$$
-and total annual biomass is:
+and where $CPUE^B_{s,k,y,l,i} = \sum_{n_l}\hat{W}_j$ and $CPUE^N_{s,k,y,l,i} = \sum_{n_l}1$ are the station specific CPUEs for biomass and abundance of fish in size bin l (respectively). CPUE was converted to total strata- and bin-specific biomass ($B_{s,k,y,l} $) by multiplying the strata average catch ( $\bar{CPUE}_{s,k,y,l}$ ) for each species and bin by the strata area $A_{k}$ ( $Km2$; saved as the object `cpue_data$total_bin_B_N`):
 
-$$B_{s,y}= \sum_{n_l}{\sum_{n_k}{B_{s,y,k,l}}}$$
+$$B_{s,k,y,l} =  \bar{CPUE}^{B}_{s,k,y,l} \dot{}A_{k}$$
+ and 
+ $$N_{s,k,y,l} =  \bar{CPUE}^{N}_{s,k,y,l} \dot{}A_{k}$$
+ 
+We then calculated the proportion of total annual abundance ($N_{s,y}= \sum_k{\sum_l{N_{s,k,y,l}}}$) or biomass ($B_{s,y}= \sum_k{\sum_l{B_{s,k,y,l}}}$; saved as `cpue_data$totalB_N`) of each species and bin $l$ in each strata $k$ as (saved as the object `cpue_data$propByStrataBin`):
+
+$$p^N_{s,k,y,l} = \frac{N_{s,k,y,l}}{ \sum_k{\sum_l{N_{s,k,y,l}}}}$$
+and
+$$p^B_{s,k,y,l} = \frac{B_{s,k,y,l}}{ \sum_k{\sum_l{B_{s,k,y,l}}}}$$
+and the proportion of total annual biomass (or abundance) of each species in each strata as
+(saved as the object `cpue_data$propByStrata`):
+$$p^B_{s,k,y} = \frac{\sum_l({B_{s,k,y,l}})}{ \sum_k{\sum_l{B_{s,k,y,l}}}}$$
+
+and the proportion of total annual biomass of each species in each bin l:
+(saved as the object `cpue_data$propByBin`):
+$$p^B_{s,k,l} = \frac{\sum_k({B_{s,k,y,l}})}{ \sum_k{\sum_l{B_{s,k,y,l}}}}$$
+
+
+
 
 # Comparison of Bering Sea survey values
 
@@ -125,9 +131,7 @@ $$B_{s,y}= \sum_{n_l}{\sum_{n_k}{B_{s,y,k,l}}}$$
 # **IMPORTANT:**  
 #   
 #   * **This step  must be connected to the RACEBASE SQL database**
-#   
-#   * **To change R studio from the default 64 bit to 32 bit go to Tools>Global options and select the 32 bit version of R.**   
-#   
+# 
 #   * **The code will connect to the SQL database using your password and username. Remember to update the `username_path` in the first line of the `R/setup.R ` file and corresponding `username` and `password` under `username_password.R`. A template is available under `R/`.**
 # 
 # <!-- ![Header of `setup.R` where `username_path` can be adjusted. This file also is where species, regions, and bins are specified.](figs/setup.jpg){width=80%} -->
@@ -138,6 +142,9 @@ $$B_{s,y}= \sum_{n_l}{\sum_{n_k}{B_{s,y,k,l}}}$$
   #----------------------------------------
     # rm(list=ls())
     # this uses the password saved in R/password.R
+    update_qrydate      <-   TRUE  # update the query date
+    update_LWdata       <-   TRUE # update LW regressions
+    update_lkups        <-   TRUE # update the lookuptables
     suppressMessages(source("R/make.R"))
 
   # update the SQL queries
@@ -173,7 +180,7 @@ $$B_{s,y}= \sum_{n_l}{\sum_{n_k}{B_{s,y,k,l}}}$$
     location_nebs <- location;rm(location)
     load(file.path(data.path,"sebs",sp,"location.Rdata"))
     location_sebs <- location;rm(location)
-    location<- rbind(location_nebs, location_sebs)
+    location      <- rbind(location_nebs, location_sebs)
     
     save(location,file = file.path(data.path,"ebs",sp,"location.Rdata"))
     
@@ -183,7 +190,7 @@ $$B_{s,y}= \sum_{n_l}{\sum_{n_k}{B_{s,y,k,l}}}$$
     location_catch_nebs <- location_catch;rm(location_catch)
     load(file.path(data.path,"sebs",sp,"location_catch.Rdata"))
     location_catch_sebs <- location_catch;rm(location_catch)
-    location_catch <- rbind(location_catch_nebs%>%
+    location_catch      <- rbind(location_catch_nebs%>%
       mutate(SURVEY_DEFINITION_ID_aka =SURVEY_DEFINITION_ID,SURVEY_DEFINITION_ID =98),
      location_catch_sebs%>%
       mutate(SURVEY_DEFINITION_ID_aka =SURVEY_DEFINITION_ID,SURVEY_DEFINITION_ID =98))
@@ -203,6 +210,7 @@ $$B_{s,y}= \sum_{n_l}{\sum_{n_k}{B_{s,y,k,l}}}$$
 # 
 # #```{r updateLWglms, echo=TRUE, eval=FALSE}    
 
+    # GAP_PRODUCTS.AKFIN_LENGTHS
   # update the LW regressions 
   #---------------------------------------------  
 
@@ -235,6 +243,8 @@ $$B_{s,y}= \sum_{n_l}{\sum_{n_k}{B_{s,y,k,l}}}$$
    STRATA_AREA%>%filter(REGION=="BS",YEAR==2022)%>%select(STRATUM)
 
    # overwrite the NEBS frame from setup for the next set of code (ebs = sebs+nebs now forward)
+   # up above I combine the NEBS+SEBS into the ebs folder and rename the rest NEBS or SEBS accordingly 
+   # - so even though the survey number is 98 it;s actually 98 & 143.
   srvys <- data.frame(reg=c("ebs","goa","ai","slope"),RGN = c("BS","GOA","AI","SLOPE"), num=c(98,47,52,78)  )
   # srvys <- data.frame(reg=c("ebs","goa","ai"),RGN = c("BS","GOA","AI"), num=c(98,47,52)  )
   nreg <- length(srvys$reg)
@@ -247,12 +257,13 @@ $$B_{s,y}= \sum_{n_l}{\sum_{n_k}{B_{s,y,k,l}}}$$
         # first SEBS only:
         # -------------------------------
         STRATA_AREAUSE <- STRATA_AREA%>%filter(REGION==srvys$RGN[r])
-        maxyr <- max(STRATA_AREAUSE$YEAR)
+        maxyr          <- max(STRATA_AREAUSE$YEAR)
         STRATA_AREAUSE <- STRATA_AREAUSE%>%
           filter(YEAR==2022)%>%
           group_by(REGION,STRATUM)%>%
           summarize(AREA = mean(AREA, na.rm=T))%>%ungroup()
         
+        # label "sebs"
          flnm <- paste0("s",srvys[r,]$reg,".srvy",
                      srvys[r,]$num,".",
                      species_lkup[s,]$sp)
@@ -285,7 +296,7 @@ $$B_{s,y}= \sum_{n_l}{\sum_{n_k}{B_{s,y,k,l}}}$$
           STRATA_AREAIN = STRATA_AREAUSE,
           flnm       = flnm,
           species    = species_lkup[s,]$SPECIES_CODE,
-          survey     = srvys[r,]$num,
+          survey     = srvys[r,]$num,  #? shouldn't this be 98&143? No, I see, up above I combine the NEBS+SEBS into the ebs folder and rename the rest NEBS or SEBS accordingly - so even though the survey number is 98 it;s actually 98 & 143.
           includeNBS   = TRUE,
           NEBSStrataIN = NEBS_strata ,
           saveit     = T,
@@ -353,7 +364,212 @@ $$B_{s,y}= \sum_{n_l}{\sum_{n_k}{B_{s,y,k,l}}}$$
 
     }
   }
-#   
+  
+# Now make BT and SST files for strata, station and all basin
+  
+
+  # srvys <- data.frame(reg=c("ebs","goa","ai"),RGN = c("BS","GOA","AI"), num=c(98,47,52)  )
+  nreg <- length(srvys$reg)
+
+  na.length <- function(x,na.rm=F){
+    if(na.rm == T)
+       if(any(is.na(x)))
+         x <- x[!is.na(x)]
+   return( length(x))
+  }
+  i <-0
+  for(regfl in srvys[,1] ){
+    if(regfl!="slope"){
+    i <- i +1
+    load(file.path(data.path,regfl,"plk/location.Rdata"))
+    
+    tmp<-location%>%group_by(YEAR,STRATUM,STATIONID)%>%
+      summarize(
+        TEMP=mean(TEMP,na.rm=T),
+       # sdTEMP = sd(TEMP,na.rm=T),
+        num= na.length(TEMP,na.rm=T),
+        SST = mean(SST,na.rm=T),
+       # sdSST = sd(SST,na.rm=T),
+        LAT=mean(LAT,na.rm=T),
+        LON = mean (LON,na.rm=T),
+        MONTH = mean(MONTH,na.rm=T),
+        DAY = mean (DAY,na.rm=T))%>%mutate(region = regfl)
+    
+    if(i ==1)
+      TEMP <- tmp
+    else
+      TEMP <- rbind(TEMP,tmp)
+    rm(tmp)
+}
+  }
+  TEMP_station <- TEMP
+  TEMP_yk <- TEMP%>%group_by(YEAR,STRATUM,region)%>%
+      summarize(
+        mnTEMP=mean(TEMP,na.rm=T),
+        sdTEMP = sd(TEMP,na.rm=T),
+        num= na.length(TEMP,na.rm=T),
+        mnSST = mean(SST,na.rm=T),
+        sdSST = sd(SST,na.rm=T),
+        LAT=mean(LAT,na.rm=T),
+        LON = mean (LON,na.rm=T),
+        MONTH = mean(MONTH,na.rm=T),
+        DAY = mean (DAY,na.rm=T))%>%ungroup()
+  
+  # Now just for EBS and GOA
+  
+  # -------------------------------
+        STRATA_AREAUSE <- STRATA_AREA%>%filter(REGION=="BS")
+        STRATA_AREAUSE <- STRATA_AREAUSE%>%
+          filter(YEAR==2022)%>%  # updated with revised projection datum. Use 2022
+          group_by(REGION,STRATUM)%>%
+          summarize(AREA = mean(AREA, na.rm=T))%>%ungroup()
+  
+  sub<- TEMP_yk%>%
+    group_by(YEAR,STRATUM,region)%>%
+    filter(region %in% c("nebs","sebs"))%>%
+    mutate(REGION = "BS")%>%
+    left_join(STRATA_AREAUSE)%>%
+    ungroup()
+  
+  sub<- sub%>%
+    left_join(
+      sub%>%group_by(YEAR,STRATUM,REGION)%>%
+        summarize(AREA = unique(AREA))%>%ungroup()%>%
+        group_by(YEAR,REGION)%>%
+        summarize(sumAREA=sum(AREA,na.rm=T)))%>%
+    mutate(propA = AREA/sumAREA)%>%ungroup()
+    
+  
+  sub%>%group_by(YEAR,REGION)%>%
+        summarize(sum(propA,na.rm=T))
+  
+  
+  SEBS_NEBS_TEMP_y <- sub%>%
+    group_by(YEAR,REGION)%>%
+    summarize(
+        mnTEMP = sum(mnTEMP*propA,na.rm=T),
+        sdTEMP = sum(sdTEMP*propA,na.rm=T),
+        mnSST  = sum(mnSST*propA,na.rm=T),
+        sdSST  = sum(sdSST*propA,na.rm=T),
+        num    = sum(num,na.rm=T),
+        MONTH  = sum(MONTH*propA,na.rm=T),
+        DAY    = sum (DAY*propA,na.rm=T))%>%ungroup()
+  
+  # now just the NEBS:
+  sub<- TEMP_yk%>%
+    group_by(YEAR,STRATUM,region)%>%
+    filter(region %in% c("nebs"))%>%
+    mutate(REGION = "BS")%>%
+    left_join(STRATA_AREAUSE)%>%
+    ungroup()
+  
+  sub<- sub%>%
+    left_join(
+      sub%>%group_by(YEAR,STRATUM,REGION)%>%
+        summarize(AREA = unique(AREA))%>%ungroup()%>%
+        group_by(YEAR,REGION)%>%
+        summarize(sumAREA=sum(AREA,na.rm=T)))%>%
+    mutate(propA = AREA/sumAREA)%>%ungroup()
+  
+  sub%>%group_by(YEAR,REGION)%>%
+        summarize(sum(propA,na.rm=T))
+  
+  
+  NEBS_TEMP_y <- sub%>%
+    group_by(YEAR,REGION)%>%
+    summarize(
+        mnTEMP = sum(mnTEMP*propA,na.rm=T),
+        sdTEMP = sum(sdTEMP*propA,na.rm=T),
+        mnSST  = sum(mnSST*propA,na.rm=T),
+        sdSST  = sum(sdSST*propA,na.rm=T),
+        num    = sum(num,na.rm=T),
+        MONTH  = sum(MONTH*propA,na.rm=T),
+        DAY    = sum (DAY*propA,na.rm=T))%>%ungroup()
+  
+   # now just the NEBS:
+  sub<- TEMP_yk%>%
+    group_by(YEAR,STRATUM,region)%>%
+    filter(region %in% c("sebs"))%>%
+    mutate(REGION = "BS")%>%
+   left_join(STRATA_AREAUSE)%>%
+    ungroup()
+  
+  sub<- sub%>%
+    left_join(
+      sub%>%group_by(YEAR,STRATUM,REGION)%>%
+        summarize(AREA = unique(AREA))%>%ungroup()%>%
+        group_by(YEAR,REGION)%>%
+        summarize(sumAREA=sum(AREA,na.rm=T)))%>%
+    mutate(propA = AREA/sumAREA)%>%ungroup()
+    
+  
+  sub%>%group_by(YEAR,REGION)%>%
+        summarize(sum(propA,na.rm=T))
+  
+  
+  SEBS_TEMP_y <- sub%>%
+    group_by(YEAR,REGION)%>%
+    summarize(
+        mnTEMP = sum(mnTEMP*propA,na.rm=T),
+        sdTEMP = sum(sdTEMP*propA,na.rm=T),
+        mnSST  = sum(mnSST*propA,na.rm=T),
+        sdSST  = sum(sdSST*propA,na.rm=T),
+        num    = sum(num,na.rm=T),
+        MONTH  = sum(MONTH*propA,na.rm=T),
+        DAY    = sum (DAY*propA,na.rm=T))%>%ungroup()
+  
+  
+  # now for GOA
+  
+  STRATA_AREAUSE <- STRATA_AREA%>%filter(REGION=="GOA")
+       STRATA_AREAUSE <- STRATA_AREAUSE%>%
+          filter(YEAR==1993)%>%
+          group_by(REGION,STRATUM)%>%
+          summarize(AREA = mean(AREA, na.rm=T))%>%ungroup()
+        
+  sub<- TEMP_yk%>%
+    group_by(YEAR,STRATUM,region)%>%
+    filter(region %in% c("goa"))%>%
+    mutate(REGION = "GOA")%>%
+    left_join(STRATA_AREAUSE)%>%
+    ungroup()
+  
+  sub<- sub%>%
+    left_join(
+      sub%>%group_by(YEAR,STRATUM,REGION)%>%
+        summarize(AREA = unique(AREA))%>%ungroup()%>%
+        group_by(YEAR,REGION)%>%
+        summarize(sumAREA=sum(AREA,na.rm=T)))%>%
+    mutate(propA = AREA/sumAREA)%>%ungroup()
+    
+  
+  sub%>%group_by(YEAR,REGION)%>%
+        summarize(sum(propA,na.rm=T))
+  
+  
+  GOA_TEMP_y <- sub%>%
+    group_by(YEAR,REGION)%>%
+    summarize(
+        mnTEMP = sum(mnTEMP*propA,na.rm=T),
+        sdTEMP = sum(sdTEMP*propA,na.rm=T),
+        mnSST  = sum(mnSST*propA,na.rm=T),
+        sdSST  = sum(sdSST*propA,na.rm=T),
+        num    = sum(num,na.rm=T),
+        MONTH  = sum(MONTH*propA,na.rm=T),
+        DAY    = sum (DAY*propA,na.rm=T))%>%ungroup()
+  
+  
+  if(!dir.exists(file.path(data.out,"Temp")))
+    dir.create(file.path(data.out,"Temp"))
+  save(GOA_TEMP_y,file = file.path(data.out,"Temp/GOA_TEMP_y.Rdata"))
+  save(SEBS_TEMP_y,file = file.path(data.out,"Temp/SEBS_TEMP_y.Rdata"))
+  save(NEBS_TEMP_y,file = file.path(data.out,"Temp/NEBS_TEMP_y.Rdata"))
+  save(SEBS_NEBS_TEMP_y,file = file.path(data.out,"Temp/SEBS_NEBS_TEMP_y.Rdata"))
+  save(TEMP_station,file = file.path(data.out,"Temp/TEMP_station.Rdata"))
+  save(TEMP_yk,file = file.path(data.out,"Temp/TEMP_yk.Rdata"))
+  
+  
+#
 # ```
 # 
 # *The cpue files are now saved in the directory `r file.path(data.out,"../")`*
@@ -409,9 +625,10 @@ checkit <-function(x){
 
 ```{r Bage, include=F,eval=F}
 
+# Make comparitive plots
 update_LWdata   =  FALSE 
 update_lkups    =  FALSE
-#suppressMessages(source("R/make.R"))
+update_qrydate  =  FALSE
 suppressMessages(source("R/setup.R"))
 suppressMessages(source("R/packages.R"))
 load(file.path("data/in/lookup_files","species_lkup.Rdata"))
@@ -433,21 +650,26 @@ cpue2atf <- cpue_data; rm(cpue_data)
 load(file.path(data.out,"cpue/ebs/ebs.srvy98.atf.cpue_data.Rdata"))
 cpue1atf <- cpue_data; rm(cpue_data)
 
-compare_plot <- function(obsIN = obs,cpue1, cpue2, spIN="plk"){
+compare_plot <- function(obsIN = obs,cpue1, cpue2, spIN="plk",offset=0){
   tmp  <- obs%>%filter(species==spIN)
   spnm <- species_lkup[species_lkup$sp==spIN,]$COMMON_NAME
   p    <- ggplot()+
     geom_line(data=cpue2$totalB_N,aes(x=YEAR,y=B_KG_y, color ="SEBS"),size=.8)+
+    geom_point(data=cpue2$totalB_N,aes(x=YEAR,y=B_KG_y, color ="SEBS"),size=2.4)+
+    geom_errorbar(data=cpue2$totalB_N,
+                  aes(x=YEAR,ymin=(B_KG_y-seB_KG_y ),ymax=(B_KG_y+seB_KG_y), color ="SEBS"))+
+    
     geom_line(data=cpue1$totalB_N,aes(x=YEAR,y=B_KG_y, color ="SEBS+ NEBS"),size=.8)+
-    geom_point(data=cpue1$totalB_N,aes(x=YEAR,y=B_KG_y, color ="SEBS+ NEBS"),size=2)+
+    geom_point(data=cpue1$totalB_N,aes(x=YEAR+offset,y=B_KG_y, color ="SEBS+ NEBS"),size=2)+
     geom_errorbar(data=cpue1$totalB_N,
                   aes(x=YEAR,ymin=(B_KG_y-seB_KG_y ),ymax=(B_KG_y+seB_KG_y), color ="SEBS+ NEBS"))+
+    
     geom_line(data=tmp,
                aes(x=YEAR,y=totB*1000, color ="CEATTLE (vast?) NEBS+SEBS"),size=.8)+
     geom_point(data=tmp,
-               aes(x=YEAR,y=totB*1000, color ="CEATTLE (vast?) NEBS+SEBS"),size=2)+
+               aes(x=YEAR+2*offset,y=totB*1000, color ="CEATTLE (vast?) NEBS+SEBS"),size=2)+
     geom_errorbar(data=tmp,
-               aes(x=YEAR,ymin=(totB-totBse)*1000,ymax=(totB+totBse)*1000, color ="CEATTLE (vast?) NEBS+SEBS"))+theme_minimal()+ggtitle(spnm)
+               aes(x=YEAR+2*offset,ymin=(totB-totBse)*1000,ymax=(totB+totBse)*1000, color ="CEATTLE (vast?) NEBS+SEBS"))+theme_minimal()+ggtitle(spnm)
   return(p)
 }
 
@@ -455,18 +677,57 @@ p_plk  <- compare_plot(obsIN = obs,cpue1 = cpue1plk, cpue2  = cpue2plk, spIN = "
 p_pcod <- compare_plot(obsIN = obs,cpue1 = cpue1pcod, cpue2 = cpue2pcod,spIN = "pcod")  
 p_atf  <- compare_plot(obsIN = obs,cpue1 = cpue1atf, cpue2  = cpue2atf, spIN = "atf")  
 
+
+
+col_ramp <- colorRampPalette( c(brewer.pal(11,"Spectral")[c(3,9)], brewer.pal(11,"RdBu")[c(11)]))
+col <- col_ramp(7)[c(4,1,6)]
+
 jpeg(file="Figs/plk_srvy.jpg", width = 9, height = 4, res = 350,units="in")
-print(p_plk)
+print(p_plk+scale_color_manual(values =col)+ labs(color=NULL) ) 
 dev.off()
 
 jpeg(file="Figs/pcod_srvy.jpg", width = 9, height = 4, res = 350,units="in")
-print(p_pcod)
+print(p_pcod+scale_color_manual(values =col)+ labs(color=NULL))
 dev.off()
 
 jpeg(file="Figs/atf_srvy.jpg", width = 9, height = 4, res = 350,units="in")
-print(p_atf)
+print(p_atf+scale_color_manual(values =col)+ labs(color=NULL))
 dev.off()
 
+
+
+ propNEBS <- rbind(
+   cpue1plk$propByStrata%>%
+   filter(STRATUM%in%c(70,71,81,90,82))%>%
+   select(YEAR,CN,SN, sp,propB_yk,propN_yk)%>%
+   group_by(YEAR,CN,SN, sp)%>%
+     summarize(Biomass=sum(propB_yk),Abundance=sum(propN_yk)),
+   
+   cpue1pcod$propByStrata%>%
+   filter(STRATUM%in%c(70,71,81,90,82))%>%
+   select(YEAR,CN,SN, sp,propB_yk,propN_yk)%>%
+   group_by(YEAR,CN,SN, sp)%>%
+     summarize(Biomass=sum(propB_yk),Abundance=sum(propN_yk)),
+   
+    cpue1atf$propByStrata%>%
+   filter(STRATUM%in%c(70,71,81,90,82))%>%
+   select(YEAR,CN,SN, sp,propB_yk,propN_yk)%>%
+   group_by(YEAR,CN,SN, sp)%>%
+     summarize(Biomass=sum(propB_yk),Abundance=sum(propN_yk)))
+ 
+ propNEBS <-  melt(propNEBS, id.vars=c("YEAR","CN","SN","sp"))%>%rename(prop_nebs=value, type=variable)
+ 
+PNorth <- ggplot(propNEBS)+
+  geom_point(aes(x=YEAR,y= prop_nebs, color = CN),size=2)+
+  geom_line(aes(x=YEAR,y= prop_nebs, color = CN),size=1)+
+  facet_grid(type~.)+
+  ylab("Proportion CPUE in NEBS strata (70,71,81,90,82)")+
+  scale_color_manual(values =col)+ labs(color=NULL)+ 
+  theme_minimal()
+
+jpeg(file="Figs/propN.jpg", width = 9, height = 4, res = 350,units="in")
+print(PNorth)
+dev.off()
 
 
 ```

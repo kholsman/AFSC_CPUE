@@ -10,3 +10,4 @@ data
 *.DS_Store
 **NotShared**
 **._*
+**not_shared**

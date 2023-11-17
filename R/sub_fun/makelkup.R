@@ -13,6 +13,8 @@ makelkup<-function(conIN,outfl = "data/in/lookup_files"){
   stations <- sqlQuery(conIN,"SELECT * FROM foodlab.STATION_LOOKUP")
   cat(" --   Haul\n")
   HAUL     <- sqlQuery(conIN,"SELECT * FROM foodlab.HAUL")
+ 
+  #HAUL_RACE     <- sqlQuery(conIN,"SELECT * FROM RACEBASE.HAUL", max = 2)
   # cat(" --HAUL_RB\n")
   # HAUL_RB  <- sqlQuery(conIN,"SELECT * FROM racebase.HAUL")
   cat(" --   SPECIES\n")
