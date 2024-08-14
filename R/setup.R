@@ -9,7 +9,7 @@
   # Set up SQL stuff:
   #----------------------------------------
   username_path <- "R"   # copy the template from the data/in folder to not_shared
-  qrydate       <-  "2023_09_26"  #"2023_03_02"
+  qrydate       <-  "2024_08_14" #2023_09_26"  #"2023_03_02"
   #walleye pollock, Pacific cod, arrowtooth flounder, sablefish Pacific ,halibut
   
   # Set switches for this code

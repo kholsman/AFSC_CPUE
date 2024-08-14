@@ -147,12 +147,13 @@ $$p^B_{s,k,l} = \frac{\sum_k({B_{s,k,y,l}})}{ \sum_k{\sum_l{B_{s,k,y,l}}}}$$
     update_lkups        <-   TRUE # update the lookuptables
     suppressMessages(source("R/make.R"))
 
-  # update the SQL queries
+  # update the SQL queries for goa, ai, sebs and nebs
   #---------------------------------------------  
 
   source(file.path(code.path,"R/sub_scripts/runRACE_qrys.R"))
 
   # combine sebs and nebs into one region: ebs
+  #---------------------------------------------  
   if(dir.exists(file.path(data.path,"ebs")))
       system(paste("rm -r",file.path(data.path,"ebs")))
     dir.create(file.path(data.path,"ebs"))
@@ -210,7 +211,7 @@ $$p^B_{s,k,l} = \frac{\sum_k({B_{s,k,y,l}})}{ \sum_k{\sum_l{B_{s,k,y,l}}}}$$
 # 
 # #```{r updateLWglms, echo=TRUE, eval=FALSE}    
 
-    # GAP_PRODUCTS.AKFIN_LENGTHS
+  # GAP_PRODUCTS.AKFIN_LENGTHS
   # update the LW regressions 
   #---------------------------------------------  
 
@@ -221,14 +222,14 @@ $$p^B_{s,k,l} = \frac{\sum_k({B_{s,k,y,l}})}{ \sum_k{\sum_l{B_{s,k,y,l}}}}$$
   }
   species_lkup
 
-#```
+```
 
 
 ## Step 3: Get CPUE data from the surveys
 
-#This code is the core script for generating the CPUE_NUMKM2 and CPUE_BIOMKM2 values by size bin, region, and species. 
+# This code is the core script for generating the CPUE_NUMKM2 and CPUE_BIOMKM2 values by size bin, region, and species. 
 
-#```{r updateCPUE, echo=TRUE, eval=FALSE} 
+```{r updateCPUE, echo=TRUE, eval=FALSE} 
   
   STRATA_AREA%>%filter(REGION=="BS")%>%
     group_by(YEAR)%>%summarise(mnAREA  = mean(AREA, na.rm=T),
@@ -568,7 +569,7 @@ $$p^B_{s,k,l} = \frac{\sum_k({B_{s,k,y,l}})}{ \sum_k{\sum_l{B_{s,k,y,l}}}}$$
   save(TEMP_station,file = file.path(data.out,"Temp/TEMP_station.Rdata"))
   save(TEMP_yk,file = file.path(data.out,"Temp/TEMP_yk.Rdata"))
   
-  
+  cat("The cpue files are now saved in the directory ",file.path(data.out,"../"))
 #
 # ```
 # 
@@ -619,6 +620,10 @@ checkit <-function(x){
   checkit(cnt_ByStrata$sum_propB_yk)
   checkit(cnt_ByBin$sum_propB_yl)
   
+  
+  # Step 4 Create Assessment files
+  # source("R/sub_scripts/make_assessment_files.R")
+  
 # 
 ```  
 
@@ -665,11 +670,11 @@ compare_plot <- function(obsIN = obs,cpue1, cpue2, spIN="plk",offset=0){
                   aes(x=YEAR,ymin=(B_KG_y-seB_KG_y ),ymax=(B_KG_y+seB_KG_y), color ="SEBS+ NEBS"))+
     
     geom_line(data=tmp,
-               aes(x=YEAR,y=totB*1000, color ="CEATTLE (vast?) NEBS+SEBS"),size=.8)+
+               aes(x=YEAR,y=totB*1000, color ="2022 MSMassmnt (vast?) NEBS+SEBS"),size=.8)+
     geom_point(data=tmp,
-               aes(x=YEAR+2*offset,y=totB*1000, color ="CEATTLE (vast?) NEBS+SEBS"),size=2)+
+               aes(x=YEAR+2*offset,y=totB*1000, color ="2022 MSMassmnt (vast?) NEBS+SEBS"),size=2)+
     geom_errorbar(data=tmp,
-               aes(x=YEAR+2*offset,ymin=(totB-totBse)*1000,ymax=(totB+totBse)*1000, color ="CEATTLE (vast?) NEBS+SEBS"))+theme_minimal()+ggtitle(spnm)
+               aes(x=YEAR+2*offset,ymin=(totB-totBse)*1000,ymax=(totB+totBse)*1000, color ="2022 MSMassmnt (vast?) NEBS+SEBS"))+theme_minimal()+ggtitle(spnm)
   return(p)
 }
 
