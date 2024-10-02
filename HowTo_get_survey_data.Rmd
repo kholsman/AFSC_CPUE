@@ -331,22 +331,26 @@ $$p^B_{s,k,l} = \frac{\sum_k({B_{s,k,y,l}})}{ \sum_k{\sum_l{B_{s,k,y,l}}}}$$
         
       }
       if(!srvys[r,]$reg%in%c("ebs","goa")){
-        flnm <- paste0(srvys[r,]$reg,".srvy",
-                     srvys[r,]$num,".",
-                     species_lkup[s,]$sp)
-        cat("now getting data for: ",flnm,"\n")
-        cpue_data <- suppressMessages(
-          get_CPUE_DATA(
-          datapath   = data.path,
-          out_dir    = file.path(data.out),
-          STRATA_AREAIN = NULL,
-          flnm       = flnm,
-          species    = species_lkup[s,]$SPECIES_CODE,
-          survey     = srvys[r,]$num,
-          includeNBS = FALSE,
-          NEBSStrataIN = NEBS_strata ,
-          saveit     = T,
-          bins       = sp_bins[[ species_lkup[s,]$sp ]]))
+        if(species_lkup[s,]$sp=="yfs"&srvys[r,]$reg=="slope"){
+          #skip
+        }else{
+          flnm <- paste0(srvys[r,]$reg,".srvy",
+                       srvys[r,]$num,".",
+                       species_lkup[s,]$sp)
+          cat("now getting data for: ",flnm,"\n")
+          cpue_data <- suppressMessages(
+            get_CPUE_DATA(
+            datapath   = data.path,
+            out_dir    = file.path(data.out),
+            STRATA_AREAIN = NULL,
+            flnm       = flnm,
+            species    = species_lkup[s,]$SPECIES_CODE,
+            survey     = srvys[r,]$num,
+            includeNBS = FALSE,
+            NEBSStrataIN = NEBS_strata ,
+            saveit     = T,
+            bins       = sp_bins[[ species_lkup[s,]$sp ]]))
+        }
 
       }
      
