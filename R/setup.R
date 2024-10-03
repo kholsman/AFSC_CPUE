@@ -5,37 +5,46 @@
 #'Kirstin.holsman@noaa.gov
 #'
 #'
-
+  # Set switches for this code
+  #----------------------------------------
+  if(update_qrydate){
+   qrydate <-  format(Sys.time(), "%Y_%m_%d")
+   save(qrydate, file=file.path("data","in","lookup_files","qrydate.R"))
+  }else{
+    # qrydate       <- "2024_09_16" #"2024_08_14" #2023_09_26"  #"2023_03_02"
+    load(file=file.path("data","in","lookup_files","qrydate.R"))# Set up data folders:
+  }
   # Set up SQL stuff:
   #----------------------------------------
   username_path <- "R"   # copy the template from the data/in folder to not_shared
-  qrydate       <- "2024_09_16" #"2024_08_14" #2023_09_26"  #"2023_03_02"
-  #walleye pollock, Pacific cod, arrowtooth flounder, sablefish Pacific ,halibut
-  
-  # Set switches for this code
-  #----------------------------------------
-  if(update_qrydate)
-   qrydate <-  format(Sys.time(), "%Y_%m_%d")
-  
-  # Set up data folders:
+ 
   #------------------------------------
   code.path   <- getwd()
-  data.path   <- file.path("data/in",qrydate)
-  data.out    <- file.path("data/out",qrydate)
+  data.path   <- data.in   <- file.path("data","in",qrydate)
+  
+  data.out    <- file.path("data","out",qrydate)
+  if(update_qrydate)
+    if(dir.exists(data.out)) 
+      file.rename(data.out,paste0(data.out,format(Sys.time(), "%Y_%m_%d_%H%M")))
   outfile.fig <- file.path("figs")
   
   
   if(!dir.exists("data"))dir.create("data")
-  if(!dir.exists("data/in"))dir.create("data/in")
-  if(!dir.exists("data/in/lookup_files"))dir.create("data/in/lookup_files")
+  if(!dir.exists( data.in))dir.create( data.in)
+  if(!dir.exists(file.path( data.in,"lookup_files"))) dir.create(file.path( data.in,"lookup_files"))
   # if(!dir.exists("data/in/newest"))dir.create("data/in/newest")
-  if(!dir.exists("data/out"))dir.create("data/out")
+  if(!dir.exists(data.out))dir.create(data.out)
   
   if(!dir.exists(data.out))dir.create(data.out)
   if(!dir.exists(data.path))dir.create(data.path)
   
   if(!dir.exists(outfile.fig)) dir.create(outfile.fig)
-  # 
+  
+ 
+  #walleye pollock, Pacific cod, arrowtooth flounder, sablefish Pacific ,halibut
+  
+
+ 
   # if(!dir.exists(file.path(data.out,"propB"))) 
   #   dir.create(file.path(data.out,"propB"))
   

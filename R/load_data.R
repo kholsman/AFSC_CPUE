@@ -3,7 +3,9 @@
 
 # Load base files:
 #----------------------
-if(!file.exists("data/in/lookup_files/SPECIES.Rdata")|update_lkups){
+tmpfl <- file.path("data","in","lookup_files")
+
+if(!file.exists(file.path(tmpfl,"SPECIES.Rdata"))|update_lkups){
   source(file.path(username_path,"username_password.R"))
   if(R.Version()$arch=="i386"){
     con <-  odbcConnect("AFSC",username,password)
@@ -14,7 +16,7 @@ if(!file.exists("data/in/lookup_files/SPECIES.Rdata")|update_lkups){
   close(con)
 }
 
-tmpfl <- "data/in/lookup_files"
+
 load(file.path(tmpfl,"HAUL.Rdata"))
 load(file.path(tmpfl,"NODC.Rdata"))
 load(file.path(tmpfl,"SPECIES.Rdata"))
@@ -31,7 +33,7 @@ sub_surveys     <- surveys%>%filter(SURVEY_DEFINITION_ID%in%srvys$num)
 
 if(update_lkups)
   source("R/sub_scripts/make_species_lkup.R")
-load(file.path("data/in/lookup_files","species_lkup.Rdata"))
+load(file.path(tmpfl,"species_lkup.Rdata"))
 
 if(update_LWdata){
   source("R/sub_scripts/updateLW.R")

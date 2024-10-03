@@ -626,7 +626,12 @@ checkit <-function(x){
   
   
   # Step 4 Create Assessment files
-  # source("R/sub_scripts/make_assessment_files.R")
+  if(1==10){
+  thisYr <- format(Sys.time(), "%Y")
+  today  <- format(Sys.time(), "%b %d, %Y")
+  }
+  source("R/make.R")
+  source("R/sub_scripts/make_assessment_files.R")
   
 # 
 ```  
@@ -691,15 +696,15 @@ p_atf  <- compare_plot(obsIN = obs,cpue1 = cpue1atf, cpue2  = cpue2atf, spIN = "
 col_ramp <- colorRampPalette( c(brewer.pal(11,"Spectral")[c(3,9)], brewer.pal(11,"RdBu")[c(11)]))
 col <- col_ramp(7)[c(4,1,6)]
 
-jpeg(file="Figs/plk_srvy.jpg", width = 9, height = 4, res = 350,units="in")
+jpeg(file="figs/plk_srvy.jpg", width = 9, height = 4, res = 350,units="in")
 print(p_plk+scale_color_manual(values =col)+ labs(color=NULL) ) 
 dev.off()
 
-jpeg(file="Figs/pcod_srvy.jpg", width = 9, height = 4, res = 350,units="in")
+jpeg(file="figs/pcod_srvy.jpg", width = 9, height = 4, res = 350,units="in")
 print(p_pcod+scale_color_manual(values =col)+ labs(color=NULL))
 dev.off()
 
-jpeg(file="Figs/atf_srvy.jpg", width = 9, height = 4, res = 350,units="in")
+jpeg(file="figs/atf_srvy.jpg", width = 9, height = 4, res = 350,units="in")
 print(p_atf+scale_color_manual(values =col)+ labs(color=NULL))
 dev.off()
 

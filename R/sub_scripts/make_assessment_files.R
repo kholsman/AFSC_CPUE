@@ -9,9 +9,7 @@
 #'This script creates the input files for CEATTLE
 
 
-thisYr <- format(Sys.time(), "%Y")
-today  <- format(Sys.time(), "%b %d, %Y")
-source("R/make.R") 
+ 
 # ss     <- 1
 # reg    <- c(BS = "ebs")
 rm(s)
@@ -32,9 +30,18 @@ for (reg in c("BS","GOA","AI")){
     }else{
       outpth <- paste0("data/out/",qrydate,"/cpue/",srvys[r,]$reg)
     }
-      outnm <- paste0(srvys[r,]$reg,".srvy",
+      outnmbin <- paste0(srvys[r,]$reg,".srvy",
                       srvys[r,]$num,".",
-                      species_lkup[ss,]$sp,".agecomp.Rdata")
+                      species_lkup[ss,]$sp,".agecomp_bin.Rdata")
+      outnmyrbin <- paste0(srvys[r,]$reg,".srvy",
+                      srvys[r,]$num,".",
+                      species_lkup[ss,]$sp,".agecomp_binbyYr.Rdata")
+      outnmb<- paste0(srvys[r,]$reg,".srvy",
+                         srvys[r,]$num,".",
+                         species_lkup[ss,]$sp,".agecomp.Rdata")
+      outnmyr <- paste0(srvys[r,]$reg,".srvy",
+                           srvys[r,]$num,".",
+                           species_lkup[ss,]$sp,".agecomp_byYr.Rdata")
       
       flnm <- paste0(srvys[r,]$reg,".srvy",
                      srvys[r,]$num,".",
@@ -62,14 +69,17 @@ for (reg in c("BS","GOA","AI")){
       # now get pdf of Age Length by strata and year (biomass weighted age comp)
       # age comp is in numbers per age
       
+    # get ages by strata and year and bin
       age_comp_yr_strata_bin <- LWA%>%
         group_by(REGION,STRATUM,SPECIES_CODE,YEAR,AGE,BIN, BIN_mm)%>%
         summarize(nLen  = length.na(LENGTH))
       
+      # get total across ages by strata and year and bin
       age_comp_yr_strata <- LWA%>%
         group_by(REGION,STRATUM,SPECIES_CODE,YEAR,BIN, BIN_mm)%>%
         summarize(tot  = length.na(LENGTH))
       
+      # get annual prop of ages in each bin across ages by strata and year and bin
       age_comp_yr_strata_bin <- age_comp_yr_strata_bin%>%
         left_join(age_comp_yr_strata)%>%
         mutate(age_prop = nLen/tot)
@@ -80,13 +90,12 @@ for (reg in c("BS","GOA","AI")){
       unique(test$sum)
       
       # now combine with propW by strata 
-      
+      #----------------------------------------
       age_comp_yr_strata_bin <- age_comp_yr_strata_bin%>%
         left_join(cpue_data$propByStrataBin)%>%
         filter(!is.na(SN ))
       
-      
-      # now roll up into year basin age_comp
+      # now roll up into year basin age_comp by BIN
       age_comp_yr_bin <- age_comp_yr_strata_bin%>%
         group_by(REGION, SPECIES_CODE,  YEAR,AGE,BIN,BIN_mm,CN,SN,sp)%>%
         summarize(age_prop = sum(age_prop *propB_ykl ),
@@ -94,29 +103,73 @@ for (reg in c("BS","GOA","AI")){
         mutate(age_len_comp = age_prop/sumpropB)%>%
         arrange(REGION, SN, YEAR, AGE, BIN)
       
+      # get total across ages
       age_comp_bin <- age_comp_yr_bin%>%
         group_by(REGION, SPECIES_CODE,YEAR,BIN,BIN_mm,CN,SN,sp)%>%
         summarize(tot = sum(age_len_comp, na.rm=T))
       
-      
+      # get age comp by yr and bin
       age_comp_yr_bin<- age_comp_yr_bin%>%left_join(age_comp_bin)%>%
         group_by(REGION, SPECIES_CODE,YEAR,AGE,BIN,BIN_mm,CN,SN,sp)%>%
         mutate(prop_age = age_len_comp/tot)
       
-      
+      # get age comp by bin (accross years)
       mn_age_comp_bin <- age_comp_yr_bin%>%
         group_by(REGION, SPECIES_CODE,AGE,BIN,BIN_mm,CN,SN,sp)%>%
         summarize(prop_age = mean(prop_age, na.rm=T))
       
+      # get total across ages
       mn_comp_bin <- mn_age_comp_bin%>%
         group_by(REGION, SPECIES_CODE,BIN,BIN_mm,CN,SN,sp)%>%
         summarize(tot = sum(prop_age, na.rm=T))
       
+      # rescale to total
       mn_age_comp_bin<- mn_age_comp_bin%>%left_join(mn_comp_bin)%>%
         group_by(REGION, SPECIES_CODE,AGE,BIN,BIN_mm,CN,SN,sp)%>%
         mutate(prop_age = prop_age/tot)
       
-      save(mn_age_comp_bin, file=file.path(outpth,outnm))
+      # now the same but for age comp in each year
+      #__________________________________________
+     # OKO pick up here and get mean age comp without bins!
+      # now roll up into year basin age_comp by BIN
+      age_comp_yr <- age_comp_yr_strata_bin%>%
+        group_by(REGION, SPECIES_CODE,  YEAR,AGE,CN,SN,sp)%>%
+        summarize(age_prop = sum(age_prop *propB_ykl ),
+                  sumpropB = sum(propB_ykl ))%>%
+        mutate(age_comp = age_prop/sumpropB)%>%
+        arrange(REGION, SN, YEAR, AGE)
+      
+      # get total across ages
+      age_comp <- age_comp_yr%>%
+        group_by(REGION, SPECIES_CODE,YEAR,CN,SN,sp)%>%
+        summarize(tot = sum(age_comp, na.rm=T))
+      
+      # get age comp by yr and bin
+      age_comp_yr<- age_comp_yr%>%left_join(age_comp)%>%
+        group_by(REGION, SPECIES_CODE,YEAR,AGE,CN,SN,sp)%>%
+        mutate(prop_age = age_comp/tot)
+      
+      # get age comp by bin (accross years)
+      mn_age_comp <- age_comp_yr%>%
+        group_by(REGION, SPECIES_CODE,AGE,CN,SN,sp)%>%
+        summarize(prop_age = mean(prop_age, na.rm=T))
+      
+      # get total across ages
+      mn_comp<- mn_age_comp%>%
+        group_by(REGION, SPECIES_CODE,CN,SN,sp)%>%
+        summarize(tot = sum(prop_age, na.rm=T))
+      
+      # rescale to total
+      mn_age_comp<- mn_age_comp%>%left_join(mn_comp)%>%
+        group_by(REGION, SPECIES_CODE,AGE,CN,SN,sp)%>%
+        mutate(prop_age = prop_age/tot)
+      
+      
+      save(mn_age_comp_bin, file=file.path(outpth,outnmbin))
+      save(age_comp_yr_bin, file=file.path(outpth,outnmyrbin))
+      
+      save(mn_age_comp, file=file.path(outpth,outnm))
+      save(age_comp_yr, file=file.path(outpth,outnmyr))
       
       
       #sum across ages should be 1 
