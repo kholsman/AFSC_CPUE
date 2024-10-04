@@ -13,6 +13,7 @@ makelkup<-function(conIN,outfl = "data/in/lookup_files"){
   stations <- sqlQuery(conIN,"SELECT * FROM foodlab.STATION_LOOKUP")
   cat(" --   Haul\n")
   HAUL      <- sqlQuery(conIN,"SELECT * FROM foodlab.HAUL")
+  cat(" --   HAUL_Race\n")
   HAUL_Race <- sqlQuery(conIN,"SELECT * FROM racebase.HAUL")
   HAUL_Race$YEAR <- as.numeric(substr(HAUL_Race$START_TIME,1,4))
   #HAUL_RACE     <- sqlQuery(conIN,"SELECT * FROM RACEBASE.HAUL", max = 2)
@@ -28,7 +29,7 @@ makelkup<-function(conIN,outfl = "data/in/lookup_files"){
   cat(" --   saving files in ", outfl,"\n")
   
   save(HAUL,     file=file.path(outfl,"HAUL.Rdata"))
-  save(HAUL_Race,     file=file.path(outfl,"HAUL_Race.Rdata"))
+  save(HAUL_Race, file=file.path(outfl,"HAUL_Race.Rdata"))
   save(NODC,     file=file.path(outfl,"NODC.Rdata"))
   save(SPECIES,  file=file.path(outfl,"SPECIES.Rdata"))
   save(stations, file=file.path(outfl,"stations.Rdata"))

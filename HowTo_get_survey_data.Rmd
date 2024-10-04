@@ -108,7 +108,7 @@ $$p^B_{s,k,l} = \frac{\sum_k({B_{s,k,y,l}})}{ \sum_k{\sum_l{B_{s,k,y,l}}}}$$
 
 
 
-# Comparison of Bering Sea survey values
+# Comparison of Bering Sea survey biomass indices
 
 ![](figs/plk_srvy.jpg)
 
@@ -116,8 +116,9 @@ $$p^B_{s,k,l} = \frac{\sum_k({B_{s,k,y,l}})}{ \sum_k{\sum_l{B_{s,k,y,l}}}}$$
 
 !["arrowtooth"](figs/atf_srvy.jpg)
 
+# Workflow to update biomass indices
 
-# Code  
+## Step 1 & 2 : Set up the R workspace, update lookups and LWA
 
 ```{r updateSQL, echo = TRUE, eval = FALSE}
 
@@ -227,7 +228,7 @@ $$p^B_{s,k,l} = \frac{\sum_k({B_{s,k,y,l}})}{ \sum_k{\sum_l{B_{s,k,y,l}}}}$$
 
 ## Step 3: Get CPUE data from the surveys
 
-# This code is the core script for generating the CPUE_NUMKM2 and CPUE_BIOMKM2 values by size bin, region, and species. 
+This code is the core script for generating the CPUE_NUMKM2 and CPUE_BIOMKM2 values by size bin, region, and species. 
 
 ```{r updateCPUE, echo=TRUE, eval=FALSE} 
   
@@ -627,15 +628,18 @@ checkit <-function(x){
   
   # Step 4 Create Assessment files
   if(1==10){
-  thisYr <- format(Sys.time(), "%Y")
-  today  <- format(Sys.time(), "%b %d, %Y")
-  }
-  source("R/make.R")
-  source("R/sub_scripts/make_assessment_files.R")
+    thisYr <- format(Sys.time(), "%Y")
+    today  <- format(Sys.time(), "%b %d, %Y)
+      source("R/make.R")
+    }
+    
+ 
+   source("R/sub_scripts/make_assessment_files.R")
   
 # 
 ```  
 
+## Step 4: make some plots
 
 ```{r Bage, include=F,eval=F}
 

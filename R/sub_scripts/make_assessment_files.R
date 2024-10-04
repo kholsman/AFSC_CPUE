@@ -12,12 +12,12 @@
  
 # ss     <- 1
 # reg    <- c(BS = "ebs")
-rm(s)
+
 load(paste0("data/in/",qrydate,"/LWA_srvy_noObs.Rdata"))
 head(LWA_srvy)
 regns    <- c(BS = "ebs", GOA = "goa", AI = "ai")
 sppsn     <- which(species_lkup$sp%in%c( "plk","pcod","sablefish","atf","halibut","yfs","nrs"))
-regns     <- which(srvys$reg%in%c("sebs","goa","ai"))
+regns     <- which(srvys$reg%in%c("ebs","goa","ai"))
 names(regns) <- c("BS","GOA","AI")
 
 for (reg in c("BS","GOA","AI")){
@@ -36,7 +36,7 @@ for (reg in c("BS","GOA","AI")){
       outnmyrbin <- paste0(srvys[r,]$reg,".srvy",
                       srvys[r,]$num,".",
                       species_lkup[ss,]$sp,".agecomp_binbyYr.Rdata")
-      outnmb<- paste0(srvys[r,]$reg,".srvy",
+      outnm<- paste0(srvys[r,]$reg,".srvy",
                          srvys[r,]$num,".",
                          species_lkup[ss,]$sp,".agecomp.Rdata")
       outnmyr <- paste0(srvys[r,]$reg,".srvy",
@@ -179,7 +179,8 @@ for (reg in c("BS","GOA","AI")){
       if(any(!round(unique(test$sum),1)%in%c(0,1))) 
         stop(paste("sums do not add up to 1:",paste(unique(test$sum),collapse=" "),"; sp = ",ss,"; reg = ",r ))
       
-      rm(list=c("mn_age_comp_bin","age_comp_yr_strata_bin","r","age_comp_yr_strata","age_comp_yr_bin","age_comp_bin","mn_comp_bin"))
+      rm(list=c("mn_age_comp_bin","age_comp_yr_strata_bin","r","age_comp_yr_strata"
+                ,"age_comp_yr_bin","age_comp_bin","mn_comp_bin"))
      
    }else{
     rm(list=c("LWA","cpue_data","r","bins"))
