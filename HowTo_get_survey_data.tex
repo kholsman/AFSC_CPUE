@@ -91,6 +91,20 @@
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
@@ -114,6 +128,14 @@
 \setcounter{tocdepth}{2}
 \tableofcontents
 }
+\begin{verbatim}
+## Warning: package 'svMisc' was built under R version 4.1.3
+\end{verbatim}
+
+\begin{verbatim}
+## Warning: package 'reshape2' was built under R version 4.1.3
+\end{verbatim}
+
 \hypertarget{afsc-survey-cpue-data-github.comkholsmanafsc_cpue}{%
 \paragraph{\texorpdfstring{\href{https://github.com/kholsman/AFSC_CPUE}{\textbf{AFSC
 Survey CPUE data:
@@ -124,7 +146,7 @@ Kirstin Holsman\\
 Alaska Fisheries Science Center\\
 NOAA Fisheries, Seattle WA\\
 \textbf{\url{kirstin.holsman@noaa.gov}}\strut \\
-\emph{Last updated: Jul 25, 2023}
+\emph{Last updated: Oct 04, 2024}
 
 \hypertarget{overview}{%
 \section{Overview}\label{overview}}
@@ -214,9 +236,9 @@ and where \(CPUE^B_{s,k,y,l,i} = \sum_{n_l}\hat{W}_j\) and
 \(CPUE^N_{s,k,y,l,i} = \sum_{n_l}1\) are the station specific CPUEs for
 biomass and abundance of fish in size bin l (respectively). CPUE was
 converted to total strata- and bin-specific biomass (\$B\_\{s,k,y,l\}
-\$) by multiplying the strata average catch for each species and bin by
-the strata area \(A_{k}\) ( \(Km2\); saved as the object
-\texttt{cpue\_data\$total\_bin\_B\_N}):
+\$) by multiplying the strata average catch ( \(\bar{CPUE}_{s,k,y,l}\) )
+for each species and bin by the strata area \(A_{k}\) ( \(Km2\); saved
+as the object \texttt{cpue\_data\$total\_bin\_B\_N}):
 
 \[B_{s,k,y,l} =  \bar{CPUE}^{B}_{s,k,y,l} \dot{}A_{k}\] and
 \[N_{s,k,y,l} =  \bar{CPUE}^{N}_{s,k,y,l} \dot{}A_{k}\]
@@ -238,9 +260,9 @@ and the proportion of total annual biomass of each species in each bin
 l: (saved as the object \texttt{cpue\_data\$propByBin}):
 \[p^B_{s,k,l} = \frac{\sum_k({B_{s,k,y,l}})}{ \sum_k{\sum_l{B_{s,k,y,l}}}}\]
 
-\hypertarget{comparison-of-bering-sea-survey-values}{%
-\section{Comparison of Bering Sea survey
-values}\label{comparison-of-bering-sea-survey-values}}
+\hypertarget{comparison-of-bering-sea-survey-biomass-indices}{%
+\section{Comparison of Bering Sea survey biomass
+indices}\label{comparison-of-bering-sea-survey-biomass-indices}}
 
 \includegraphics{figs/plk_srvy.jpg}
 
@@ -252,8 +274,13 @@ values}\label{comparison-of-bering-sea-survey-values}}
 \caption{``arrowtooth''}
 \end{figure}
 
-\hypertarget{code}{%
-\section{Code}\label{code}}
+\hypertarget{workflow-to-update-biomass-indices}{%
+\section{Workflow to update biomass
+indices}\label{workflow-to-update-biomass-indices}}
+
+\hypertarget{step-1-2-set-up-the-r-workspace-update-lookups-and-lwa}{%
+\subsection{Step 1 \& 2 : Set up the R workspace, update lookups and
+LWA}\label{step-1-2-set-up-the-r-workspace-update-lookups-and-lwa}}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -267,9 +294,7 @@ values}\label{comparison-of-bering-sea-survey-values}}
 \CommentTok{\# **IMPORTANT:**  }
 \CommentTok{\#   }
 \CommentTok{\#   * **This step  must be connected to the RACEBASE SQL database**}
-\CommentTok{\#   }
-\CommentTok{\#   * **To change R studio from the default 64 bit to 32 bit go to Tools\textgreater{}Global options and select the 32 bit version of R.**   }
-\CommentTok{\#   }
+\CommentTok{\# }
 \CommentTok{\#   * **The code will connect to the SQL database using your password and username. Remember to update the \textasciigrave{}username\_path\textasciigrave{} in the first line of the \textasciigrave{}R/setup.R \textasciigrave{} file and corresponding \textasciigrave{}username\textasciigrave{} and \textasciigrave{}password\textasciigrave{} under \textasciigrave{}username\_password.R\textasciigrave{}. A template is available under \textasciigrave{}R/\textasciigrave{}.**}
 \CommentTok{\# }
 \CommentTok{\# \textless{}!{-}{-} ![Header of \textasciigrave{}setup.R\textasciigrave{} where \textasciigrave{}username\_path\textasciigrave{} can be adjusted. This file also is where species, regions, and bins are specified.](figs/setup.jpg)\{width=80\%\} {-}{-}\textgreater{}}
@@ -280,14 +305,18 @@ values}\label{comparison-of-bering-sea-survey-values}}
   \CommentTok{\#{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}}
     \CommentTok{\# rm(list=ls())}
     \CommentTok{\# this uses the password saved in R/password.R}
+\NormalTok{    update\_qrydate      }\OtherTok{\textless{}{-}}   \ConstantTok{TRUE}  \CommentTok{\# update the query date}
+\NormalTok{    update\_LWdata       }\OtherTok{\textless{}{-}}   \ConstantTok{TRUE} \CommentTok{\# update LW regressions}
+\NormalTok{    update\_lkups        }\OtherTok{\textless{}{-}}   \ConstantTok{TRUE} \CommentTok{\# update the lookuptables}
     \FunctionTok{suppressMessages}\NormalTok{(}\FunctionTok{source}\NormalTok{(}\StringTok{"R/make.R"}\NormalTok{))}
 
-  \CommentTok{\# update the SQL queries}
+  \CommentTok{\# update the SQL queries for goa, ai, sebs and nebs}
   \CommentTok{\#{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}  }
 
   \FunctionTok{source}\NormalTok{(}\FunctionTok{file.path}\NormalTok{(code.path,}\StringTok{"R/sub\_scripts/runRACE\_qrys.R"}\NormalTok{))}
 
   \CommentTok{\# combine sebs and nebs into one region: ebs}
+  \CommentTok{\#{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}  }
   \ControlFlowTok{if}\NormalTok{(}\FunctionTok{dir.exists}\NormalTok{(}\FunctionTok{file.path}\NormalTok{(data.path,}\StringTok{"ebs"}\NormalTok{)))}
       \FunctionTok{system}\NormalTok{(}\FunctionTok{paste}\NormalTok{(}\StringTok{"rm {-}r"}\NormalTok{,}\FunctionTok{file.path}\NormalTok{(data.path,}\StringTok{"ebs"}\NormalTok{)))}
     \FunctionTok{dir.create}\NormalTok{(}\FunctionTok{file.path}\NormalTok{(data.path,}\StringTok{"ebs"}\NormalTok{))}
@@ -315,7 +344,7 @@ values}\label{comparison-of-bering-sea-survey-values}}
 \NormalTok{    location\_nebs }\OtherTok{\textless{}{-}}\NormalTok{ location;}\FunctionTok{rm}\NormalTok{(location)}
     \FunctionTok{load}\NormalTok{(}\FunctionTok{file.path}\NormalTok{(data.path,}\StringTok{"sebs"}\NormalTok{,sp,}\StringTok{"location.Rdata"}\NormalTok{))}
 \NormalTok{    location\_sebs }\OtherTok{\textless{}{-}}\NormalTok{ location;}\FunctionTok{rm}\NormalTok{(location)}
-\NormalTok{    location}\OtherTok{\textless{}{-}} \FunctionTok{rbind}\NormalTok{(location\_nebs, location\_sebs)}
+\NormalTok{    location      }\OtherTok{\textless{}{-}} \FunctionTok{rbind}\NormalTok{(location\_nebs, location\_sebs)}
     
     \FunctionTok{save}\NormalTok{(location,}\AttributeTok{file =} \FunctionTok{file.path}\NormalTok{(data.path,}\StringTok{"ebs"}\NormalTok{,sp,}\StringTok{"location.Rdata"}\NormalTok{))}
     
@@ -325,7 +354,7 @@ values}\label{comparison-of-bering-sea-survey-values}}
 \NormalTok{    location\_catch\_nebs }\OtherTok{\textless{}{-}}\NormalTok{ location\_catch;}\FunctionTok{rm}\NormalTok{(location\_catch)}
     \FunctionTok{load}\NormalTok{(}\FunctionTok{file.path}\NormalTok{(data.path,}\StringTok{"sebs"}\NormalTok{,sp,}\StringTok{"location\_catch.Rdata"}\NormalTok{))}
 \NormalTok{    location\_catch\_sebs }\OtherTok{\textless{}{-}}\NormalTok{ location\_catch;}\FunctionTok{rm}\NormalTok{(location\_catch)}
-\NormalTok{    location\_catch }\OtherTok{\textless{}{-}} \FunctionTok{rbind}\NormalTok{(location\_catch\_nebs}\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{    location\_catch      }\OtherTok{\textless{}{-}} \FunctionTok{rbind}\NormalTok{(location\_catch\_nebs}\SpecialCharTok{\%\textgreater{}\%}
       \FunctionTok{mutate}\NormalTok{(}\AttributeTok{SURVEY\_DEFINITION\_ID\_aka =}\NormalTok{SURVEY\_DEFINITION\_ID,}\AttributeTok{SURVEY\_DEFINITION\_ID =}\DecValTok{98}\NormalTok{),}
 \NormalTok{     location\_catch\_sebs}\SpecialCharTok{\%\textgreater{}\%}
       \FunctionTok{mutate}\NormalTok{(}\AttributeTok{SURVEY\_DEFINITION\_ID\_aka =}\NormalTok{SURVEY\_DEFINITION\_ID,}\AttributeTok{SURVEY\_DEFINITION\_ID =}\DecValTok{98}\NormalTok{))}
@@ -344,6 +373,7 @@ values}\label{comparison-of-bering-sea-survey-values}}
 \CommentTok{\# }
 \CommentTok{\# \#\textasciigrave{}\textasciigrave{}\textasciigrave{}\{r updateLWglms, echo=TRUE, eval=FALSE\}    }
 
+  \CommentTok{\# GAP\_PRODUCTS.AKFIN\_LENGTHS}
   \CommentTok{\# update the LW regressions }
   \CommentTok{\#{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}  }
 
@@ -353,16 +383,18 @@ values}\label{comparison-of-bering-sea-survey-values}}
      \FunctionTok{source}\NormalTok{(}\FunctionTok{file.path}\NormalTok{(code.path,}\StringTok{"R/load\_data.R"}\NormalTok{))}
 \NormalTok{  \}}
 \NormalTok{  species\_lkup}
+\end{Highlighting}
+\end{Shaded}
 
-\CommentTok{\#\textasciigrave{}\textasciigrave{}\textasciigrave{}}
+\hypertarget{step-3-get-cpue-data-from-the-surveys}{%
+\subsection{Step 3: Get CPUE data from the
+surveys}\label{step-3-get-cpue-data-from-the-surveys}}
 
+This code is the core script for generating the CPUE\_NUMKM2 and
+CPUE\_BIOMKM2 values by size bin, region, and species.
 
-\DocumentationTok{\#\# Step 3: Get CPUE data from the surveys}
-
-\CommentTok{\#This code is the core script for generating the CPUE\_NUMKM2 and CPUE\_BIOMKM2 values by size bin, region, and species. }
-
-\CommentTok{\#\textasciigrave{}\textasciigrave{}\textasciigrave{}\{r updateCPUE, echo=TRUE, eval=FALSE\} }
-  
+\begin{Shaded}
+\begin{Highlighting}[]
 \NormalTok{  STRATA\_AREA}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{filter}\NormalTok{(REGION}\SpecialCharTok{==}\StringTok{"BS"}\NormalTok{)}\SpecialCharTok{\%\textgreater{}\%}
     \FunctionTok{group\_by}\NormalTok{(YEAR)}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{summarise}\NormalTok{(}\AttributeTok{mnAREA  =} \FunctionTok{mean}\NormalTok{(AREA, }\AttributeTok{na.rm=}\NormalTok{T),}
                                \AttributeTok{sumAREA =} \FunctionTok{sum}\NormalTok{(AREA, }\AttributeTok{na.rm=}\NormalTok{T),}
@@ -376,6 +408,8 @@ values}\label{comparison-of-bering-sea-survey-values}}
 \NormalTok{   STRATA\_AREA}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{filter}\NormalTok{(REGION}\SpecialCharTok{==}\StringTok{"BS"}\NormalTok{,YEAR}\SpecialCharTok{==}\DecValTok{2022}\NormalTok{)}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{select}\NormalTok{(STRATUM)}
 
    \CommentTok{\# overwrite the NEBS frame from setup for the next set of code (ebs = sebs+nebs now forward)}
+   \CommentTok{\# up above I combine the NEBS+SEBS into the ebs folder and rename the rest NEBS or SEBS accordingly }
+   \CommentTok{\# {-} so even though the survey number is 98 it;s actually 98 \& 143.}
 \NormalTok{  srvys }\OtherTok{\textless{}{-}} \FunctionTok{data.frame}\NormalTok{(}\AttributeTok{reg=}\FunctionTok{c}\NormalTok{(}\StringTok{"ebs"}\NormalTok{,}\StringTok{"goa"}\NormalTok{,}\StringTok{"ai"}\NormalTok{,}\StringTok{"slope"}\NormalTok{),}\AttributeTok{RGN =} \FunctionTok{c}\NormalTok{(}\StringTok{"BS"}\NormalTok{,}\StringTok{"GOA"}\NormalTok{,}\StringTok{"AI"}\NormalTok{,}\StringTok{"SLOPE"}\NormalTok{), }\AttributeTok{num=}\FunctionTok{c}\NormalTok{(}\DecValTok{98}\NormalTok{,}\DecValTok{47}\NormalTok{,}\DecValTok{52}\NormalTok{,}\DecValTok{78}\NormalTok{)  )}
   \CommentTok{\# srvys \textless{}{-} data.frame(reg=c("ebs","goa","ai"),RGN = c("BS","GOA","AI"), num=c(98,47,52)  )}
 \NormalTok{  nreg }\OtherTok{\textless{}{-}} \FunctionTok{length}\NormalTok{(srvys}\SpecialCharTok{$}\NormalTok{reg)}
@@ -388,12 +422,13 @@ values}\label{comparison-of-bering-sea-survey-values}}
         \CommentTok{\# first SEBS only:}
         \CommentTok{\# {-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}}
 \NormalTok{        STRATA\_AREAUSE }\OtherTok{\textless{}{-}}\NormalTok{ STRATA\_AREA}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{filter}\NormalTok{(REGION}\SpecialCharTok{==}\NormalTok{srvys}\SpecialCharTok{$}\NormalTok{RGN[r])}
-\NormalTok{        maxyr }\OtherTok{\textless{}{-}} \FunctionTok{max}\NormalTok{(STRATA\_AREAUSE}\SpecialCharTok{$}\NormalTok{YEAR)}
+\NormalTok{        maxyr          }\OtherTok{\textless{}{-}} \FunctionTok{max}\NormalTok{(STRATA\_AREAUSE}\SpecialCharTok{$}\NormalTok{YEAR)}
 \NormalTok{        STRATA\_AREAUSE }\OtherTok{\textless{}{-}}\NormalTok{ STRATA\_AREAUSE}\SpecialCharTok{\%\textgreater{}\%}
           \FunctionTok{filter}\NormalTok{(YEAR}\SpecialCharTok{==}\DecValTok{2022}\NormalTok{)}\SpecialCharTok{\%\textgreater{}\%}
           \FunctionTok{group\_by}\NormalTok{(REGION,STRATUM)}\SpecialCharTok{\%\textgreater{}\%}
           \FunctionTok{summarize}\NormalTok{(}\AttributeTok{AREA =} \FunctionTok{mean}\NormalTok{(AREA, }\AttributeTok{na.rm=}\NormalTok{T))}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{ungroup}\NormalTok{()}
         
+        \CommentTok{\# label "sebs"}
 \NormalTok{         flnm }\OtherTok{\textless{}{-}} \FunctionTok{paste0}\NormalTok{(}\StringTok{"s"}\NormalTok{,srvys[r,]}\SpecialCharTok{$}\NormalTok{reg,}\StringTok{".srvy"}\NormalTok{,}
 \NormalTok{                     srvys[r,]}\SpecialCharTok{$}\NormalTok{num,}\StringTok{"."}\NormalTok{,}
 \NormalTok{                     species\_lkup[s,]}\SpecialCharTok{$}\NormalTok{sp)}
@@ -426,7 +461,7 @@ values}\label{comparison-of-bering-sea-survey-values}}
           \AttributeTok{STRATA\_AREAIN =}\NormalTok{ STRATA\_AREAUSE,}
           \AttributeTok{flnm       =}\NormalTok{ flnm,}
           \AttributeTok{species    =}\NormalTok{ species\_lkup[s,]}\SpecialCharTok{$}\NormalTok{SPECIES\_CODE,}
-          \AttributeTok{survey     =}\NormalTok{ srvys[r,]}\SpecialCharTok{$}\NormalTok{num,}
+          \AttributeTok{survey     =}\NormalTok{ srvys[r,]}\SpecialCharTok{$}\NormalTok{num,  }\CommentTok{\#? shouldn\textquotesingle{}t this be 98\&143? No, I see, up above I combine the NEBS+SEBS into the ebs folder and rename the rest NEBS or SEBS accordingly {-} so even though the survey number is 98 it;s actually 98 \& 143.}
           \AttributeTok{includeNBS   =} \ConstantTok{TRUE}\NormalTok{,}
           \AttributeTok{NEBSStrataIN =}\NormalTok{ NEBS\_strata ,}
           \AttributeTok{saveit     =}\NormalTok{ T,}
@@ -460,22 +495,26 @@ values}\label{comparison-of-bering-sea-survey-values}}
         
 \NormalTok{      \}}
       \ControlFlowTok{if}\NormalTok{(}\SpecialCharTok{!}\NormalTok{srvys[r,]}\SpecialCharTok{$}\NormalTok{reg}\SpecialCharTok{\%in\%}\FunctionTok{c}\NormalTok{(}\StringTok{"ebs"}\NormalTok{,}\StringTok{"goa"}\NormalTok{))\{}
-\NormalTok{        flnm }\OtherTok{\textless{}{-}} \FunctionTok{paste0}\NormalTok{(srvys[r,]}\SpecialCharTok{$}\NormalTok{reg,}\StringTok{".srvy"}\NormalTok{,}
-\NormalTok{                     srvys[r,]}\SpecialCharTok{$}\NormalTok{num,}\StringTok{"."}\NormalTok{,}
-\NormalTok{                     species\_lkup[s,]}\SpecialCharTok{$}\NormalTok{sp)}
-        \FunctionTok{cat}\NormalTok{(}\StringTok{"now getting data for: "}\NormalTok{,flnm,}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
-\NormalTok{        cpue\_data }\OtherTok{\textless{}{-}} \FunctionTok{suppressMessages}\NormalTok{(}
-          \FunctionTok{get\_CPUE\_DATA}\NormalTok{(}
-          \AttributeTok{datapath   =}\NormalTok{ data.path,}
-          \AttributeTok{out\_dir    =} \FunctionTok{file.path}\NormalTok{(data.out),}
-          \AttributeTok{STRATA\_AREAIN =} \ConstantTok{NULL}\NormalTok{,}
-          \AttributeTok{flnm       =}\NormalTok{ flnm,}
-          \AttributeTok{species    =}\NormalTok{ species\_lkup[s,]}\SpecialCharTok{$}\NormalTok{SPECIES\_CODE,}
-          \AttributeTok{survey     =}\NormalTok{ srvys[r,]}\SpecialCharTok{$}\NormalTok{num,}
-          \AttributeTok{includeNBS =} \ConstantTok{FALSE}\NormalTok{,}
-          \AttributeTok{NEBSStrataIN =}\NormalTok{ NEBS\_strata ,}
-          \AttributeTok{saveit     =}\NormalTok{ T,}
-          \AttributeTok{bins       =}\NormalTok{ sp\_bins[[ species\_lkup[s,]}\SpecialCharTok{$}\NormalTok{sp ]]))}
+        \ControlFlowTok{if}\NormalTok{(species\_lkup[s,]}\SpecialCharTok{$}\NormalTok{sp}\SpecialCharTok{==}\StringTok{"yfs"}\SpecialCharTok{\&}\NormalTok{srvys[r,]}\SpecialCharTok{$}\NormalTok{reg}\SpecialCharTok{==}\StringTok{"slope"}\NormalTok{)\{}
+          \CommentTok{\#skip}
+\NormalTok{        \}}\ControlFlowTok{else}\NormalTok{\{}
+\NormalTok{          flnm }\OtherTok{\textless{}{-}} \FunctionTok{paste0}\NormalTok{(srvys[r,]}\SpecialCharTok{$}\NormalTok{reg,}\StringTok{".srvy"}\NormalTok{,}
+\NormalTok{                       srvys[r,]}\SpecialCharTok{$}\NormalTok{num,}\StringTok{"."}\NormalTok{,}
+\NormalTok{                       species\_lkup[s,]}\SpecialCharTok{$}\NormalTok{sp)}
+          \FunctionTok{cat}\NormalTok{(}\StringTok{"now getting data for: "}\NormalTok{,flnm,}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\NormalTok{          cpue\_data }\OtherTok{\textless{}{-}} \FunctionTok{suppressMessages}\NormalTok{(}
+            \FunctionTok{get\_CPUE\_DATA}\NormalTok{(}
+            \AttributeTok{datapath   =}\NormalTok{ data.path,}
+            \AttributeTok{out\_dir    =} \FunctionTok{file.path}\NormalTok{(data.out),}
+            \AttributeTok{STRATA\_AREAIN =} \ConstantTok{NULL}\NormalTok{,}
+            \AttributeTok{flnm       =}\NormalTok{ flnm,}
+            \AttributeTok{species    =}\NormalTok{ species\_lkup[s,]}\SpecialCharTok{$}\NormalTok{SPECIES\_CODE,}
+            \AttributeTok{survey     =}\NormalTok{ srvys[r,]}\SpecialCharTok{$}\NormalTok{num,}
+            \AttributeTok{includeNBS =} \ConstantTok{FALSE}\NormalTok{,}
+            \AttributeTok{NEBSStrataIN =}\NormalTok{ NEBS\_strata ,}
+            \AttributeTok{saveit     =}\NormalTok{ T,}
+            \AttributeTok{bins       =}\NormalTok{ sp\_bins[[ species\_lkup[s,]}\SpecialCharTok{$}\NormalTok{sp ]]))}
+\NormalTok{        \}}
 
 \NormalTok{      \}}
      
@@ -550,7 +589,7 @@ values}\label{comparison-of-bering-sea-survey-values}}
   \CommentTok{\# {-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}}
 \NormalTok{        STRATA\_AREAUSE }\OtherTok{\textless{}{-}}\NormalTok{ STRATA\_AREA}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{filter}\NormalTok{(REGION}\SpecialCharTok{==}\StringTok{"BS"}\NormalTok{)}
 \NormalTok{        STRATA\_AREAUSE }\OtherTok{\textless{}{-}}\NormalTok{ STRATA\_AREAUSE}\SpecialCharTok{\%\textgreater{}\%}
-          \FunctionTok{filter}\NormalTok{(YEAR}\SpecialCharTok{==}\DecValTok{2022}\NormalTok{)}\SpecialCharTok{\%\textgreater{}\%}
+          \FunctionTok{filter}\NormalTok{(YEAR}\SpecialCharTok{==}\DecValTok{2022}\NormalTok{)}\SpecialCharTok{\%\textgreater{}\%}  \CommentTok{\# updated with revised projection datum. Use 2022}
           \FunctionTok{group\_by}\NormalTok{(REGION,STRATUM)}\SpecialCharTok{\%\textgreater{}\%}
           \FunctionTok{summarize}\NormalTok{(}\AttributeTok{AREA =} \FunctionTok{mean}\NormalTok{(AREA, }\AttributeTok{na.rm=}\NormalTok{T))}\SpecialCharTok{\%\textgreater{}\%}\FunctionTok{ungroup}\NormalTok{()}
   
@@ -698,7 +737,7 @@ values}\label{comparison-of-bering-sea-survey-values}}
   \FunctionTok{save}\NormalTok{(TEMP\_station,}\AttributeTok{file =} \FunctionTok{file.path}\NormalTok{(data.out,}\StringTok{"Temp/TEMP\_station.Rdata"}\NormalTok{))}
   \FunctionTok{save}\NormalTok{(TEMP\_yk,}\AttributeTok{file =} \FunctionTok{file.path}\NormalTok{(data.out,}\StringTok{"Temp/TEMP\_yk.Rdata"}\NormalTok{))}
   
-  
+  \FunctionTok{cat}\NormalTok{(}\StringTok{"The cpue files are now saved in the directory "}\NormalTok{,}\FunctionTok{file.path}\NormalTok{(data.out,}\StringTok{"../"}\NormalTok{))}
 \CommentTok{\#}
 \CommentTok{\# \textasciigrave{}\textasciigrave{}\textasciigrave{}}
 \CommentTok{\# }
@@ -749,9 +788,23 @@ values}\label{comparison-of-bering-sea-survey-values}}
   \FunctionTok{checkit}\NormalTok{(cnt\_ByStrata}\SpecialCharTok{$}\NormalTok{sum\_propB\_yk)}
   \FunctionTok{checkit}\NormalTok{(cnt\_ByBin}\SpecialCharTok{$}\NormalTok{sum\_propB\_yl)}
   
-\CommentTok{\# }
+  
+  \CommentTok{\# Step 4 Create Assessment files}
+  \ControlFlowTok{if}\NormalTok{(}\DecValTok{1}\SpecialCharTok{==}\DecValTok{10}\NormalTok{)\{}
+\NormalTok{    thisYr }\OtherTok{\textless{}{-}} \FunctionTok{format}\NormalTok{(}\FunctionTok{Sys.time}\NormalTok{(), }\StringTok{"\%Y"}\NormalTok{)}
+\NormalTok{    today  }\OtherTok{\textless{}{-}} \FunctionTok{format}\NormalTok{(}\FunctionTok{Sys.time}\NormalTok{(), }\StringTok{"\%b \%d, \%Y)}
+\StringTok{      source("}\NormalTok{R}\SpecialCharTok{/}\NormalTok{make.R}\StringTok{")}
+\StringTok{    \}}
+\StringTok{    }
+\StringTok{ }
+\StringTok{   source("}\NormalTok{R}\SpecialCharTok{/}\NormalTok{sub\_scripts}\SpecialCharTok{/}\NormalTok{make\_assessment\_files.R}\StringTok{")}
+\StringTok{  }
+\StringTok{\# }
 \end{Highlighting}
 \end{Shaded}
+
+\hypertarget{step-4-make-some-plots}{%
+\subsection{Step 4: make some plots}\label{step-4-make-some-plots}}
 
 \hypertarget{appendix-1-rsetup.rprimary-setup-script}{%
 \subsection{\texorpdfstring{Appendix 1: \texttt{R/setup.R}primary setup
